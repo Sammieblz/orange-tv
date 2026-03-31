@@ -2,7 +2,13 @@
 
 Orange TV is a TV-first launcher and local media platform designed for a living-room experience.
 
-It combines an Electron shell, a React-based TV UI, and a local .NET service backed by SQLite to deliver a fast launcher experience for streaming shortcuts, local media playback, and future extensibility for games and personalized recommendations.
+It combines an Electron shell, a React-based TV UI, and a local host service backed by SQLite to deliver a fast launcher experience for streaming shortcuts with persistent sessions, local media playback, and retro gaming — with an appliance-grade focus on recovery and return-to-home behavior.
+
+## Full-scope plan (v1.2)
+
+The detailed architecture, OS/session baseline, operations plane, data model, and delivery sequencing live here:
+
+- `docs/project-plan-v1.2.md`
 
 ## Vision
 
@@ -71,6 +77,13 @@ Responsible for:
 - Media scanning and metadata ingestion
 - Watch events and recommendation baselines
 
+## OS + session baseline (target appliance)
+
+- Ubuntu 24.04 LTS appliance image
+- Wayland session with `labwc`
+- Auto-login into the appliance account and start Orange TV on boot
+- Watchdog/recovery behavior treated as core, not late polish
+
 ## Planned stack
 
 ### Frontend
@@ -104,7 +117,7 @@ Responsible for:
 
 ## Repository structure
 
-```
+```text
 orange-tv/
   launcher/        # Electron + React frontend
   api/             # Local .NET service
@@ -132,6 +145,18 @@ orange-tv/
 - Multi-user account system
 - Heavy ML-first recommendation engine
 - Over-engineered automation before stable launcher flow exists
+
+## Operations and recovery (core platform)
+
+Orange TV is designed to behave like an appliance: if an external app exits/crashes or the shell loses focus, it should reliably return home.
+
+Planned capabilities (tracked in the full plan):
+
+- Watchdog (restart shell/service and restore home)
+- Safe mode after repeated failures
+- OTA updates with rollback
+- Diagnostics export bundle
+- Backup/restore (browser profiles, DB, settings, artwork cache)
 
 ## Development principles
 
