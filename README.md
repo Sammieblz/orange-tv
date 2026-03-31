@@ -179,13 +179,15 @@ Planned capabilities (tracked in the full plan):
 
 ## Getting started
 
+**Windows (step-by-step, clone to smoke test):** see [`docs/local-setup-windows.md`](docs/local-setup-windows.md). It covers prerequisites, install commands, first-run verification, and known gaps so you are not guessing.
+
 ### Prerequisites
 
 Recommended local tools:
 
 - Node.js LTS
 - npm
-- .NET SDK
+- .NET SDK (see `api/*.csproj` for target framework)
 - Git
 - Google Chrome
 - MPV
@@ -197,31 +199,30 @@ Optional but recommended:
 - SQLite viewer extension
 - Ubuntu 24.04 VM for Linux validation
 
+Chrome, MPV, and FFprobe are **forward-looking** for streaming and local playback; the current scaffold smoke test only needs Node, npm, and .NET. Details are in `docs/local-setup-windows.md`.
+
 ### Local development workflow
 
 The intended local development flow is:
 
 1. Run the local .NET service
-2. Run the Electron/React launcher
+2. Run the React launcher (Vite today; Electron shell planned)
 3. Develop and test features on Windows
 4. Re-validate launcher flows in Ubuntu VM at the end of each sprint
 
-### Suggested commands
+### Suggested commands (from repository root)
 
 ```bash
-# install frontend dependencies
-cd launcher
-npm install
+# one-shot install: root deps, launcher deps, dotnet restore
+npm run setup
 
-# return to repo root, restore backend dependencies
-cd ..
-dotnet restore ./api
-
-# start local service and launcher
+# start Vite (launcher) and API together
 npm run dev
 ```
 
-> **Note:** Exact scripts may evolve as the monorepo is finalized.
+The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** by default (see `api/Properties/launchSettings.json`). A first-run checklist is in `docs/local-setup-windows.md`.
+
+> **Note:** Exact scripts may evolve as the monorepo grows; `docs/local-setup-windows.md` stays the concrete Windows reference.
 
 ## Environment expectations
 
@@ -341,7 +342,6 @@ The launcher, local service, and playback flow must be stable before expanding i
 As the repository evolves, this README should be supported by:
 
 - `docs/architecture.md`
-- `docs/local-setup-windows.md`
 - `docs/local-setup-ubuntu-vm.md`
 - `docs/launch-flow.md`
 - `docs/hardware-bringup-checklist.md`
