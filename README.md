@@ -10,6 +10,16 @@ The detailed architecture, OS/session baseline, operations plane, data model, an
 
 - `docs/project-plan-v1.2.md`
 
+## Config, lint/format, and env conventions
+
+- **EditorConfig**: `.editorconfig` (repo-wide formatting baseline)
+- **Frontend lint/format** (`launcher/`):
+  - `npm --prefix launcher run lint`
+  - `npm --prefix launcher run format:check`
+- **Environment variables**:
+  - Examples: `.env.example`
+  - Documentation: `docs/environment.md`
+
 ## Vision
 
 Orange TV aims to feel like a dedicated home entertainment appliance rather than a traditional desktop app.

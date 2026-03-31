@@ -10,7 +10,8 @@
     "setup": "npm install && npm --prefix launcher install && dotnet restore api/OrangeTv.Api.csproj",
     "build": "npm --prefix launcher run build && dotnet build api/OrangeTv.Api.csproj",
     "test": "dotnet test",
-    "format": "npm --prefix launcher run format --if-present"
+    "format": "npm --prefix launcher run format --if-present",
+    "format:dotnet": "dotnet format api/OrangeTv.Api.csproj"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
