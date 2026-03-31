@@ -1,0 +1,19 @@
+{
+  "name": "orange-tv",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Orange TV monorepo root dev orchestration",
+  "scripts": {
+    "dev": "concurrently -n launcher,api -c cyan,magenta \"npm run dev:launcher\" \"npm run dev:api\"",
+    "dev:launcher": "npm --prefix launcher run dev",
+    "dev:api": "dotnet watch --project api/OrangeTv.Api.csproj run",
+    "setup": "npm install && npm --prefix launcher install && dotnet restore api/OrangeTv.Api.csproj",
+    "build": "npm --prefix launcher run build && dotnet build api/OrangeTv.Api.csproj",
+    "test": "dotnet test",
+    "format": "npm --prefix launcher run format --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
+
