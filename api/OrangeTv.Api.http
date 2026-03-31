@@ -4,3 +4,8 @@ GET {{OrangeTv.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+GET {{OrangeTv.Api_HostAddress}}/api/v1/system/platform
+Accept: application/json
+
+###

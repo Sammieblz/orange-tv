@@ -181,6 +181,10 @@ Planned capabilities (tracked in the full plan):
 
 **Windows (step-by-step, clone to smoke test):** see [`docs/local-setup-windows.md`](docs/local-setup-windows.md). It covers prerequisites, install commands, first-run verification, and known gaps so you are not guessing.
 
+**Ubuntu VM (Linux validation target):** see [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) for prerequisites, install, and a smoke checklist aligned with Windows.
+
+**Git branches and commits:** see [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ### Prerequisites
 
 Recommended local tools:
@@ -342,7 +346,6 @@ The launcher, local service, and playback flow must be stable before expanding i
 As the repository evolves, this README should be supported by:
 
 - `docs/architecture.md`
-- `docs/local-setup-ubuntu-vm.md`
 - `docs/launch-flow.md`
 - `docs/hardware-bringup-checklist.md`
 - `docs/testing-matrix.md`

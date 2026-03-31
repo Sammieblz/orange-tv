@@ -81,6 +81,8 @@ Use this after a clean clone + `npm run setup` + `npm run dev`.
 
   Expected: `200`
 
+- [ ] Optional: **GET** `http://localhost:5144/api/v1/system/platform` returns **HTTP 200** and JSON including `isWindows` and `isLinux` (verifies the injectable platform boundary used for OS-aware behavior)
+
 ### Monorepo sanity
 
 - [ ] `npm run setup` completed without errors

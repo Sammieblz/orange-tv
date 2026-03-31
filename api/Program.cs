@@ -1,8 +1,12 @@
+using System.Runtime.InteropServices;
+using OrangeTv.Api.Platform;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 
 var app = builder.Build();
 
@@ -32,6 +36,21 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.MapGet(
+        "/api/v1/system/platform",
+        (IPlatformEnvironment platform) =>
+            Results.Ok(
+                new
+                {
+                    osDescription = RuntimeInformation.OSDescription,
+                    frameworkDescription = RuntimeInformation.FrameworkDescription,
+                    platform.IsWindows,
+                    platform.IsLinux,
+                    platform.PreferredDirectorySeparator,
+                    sampleNormalizedPath = platform.NormalizePath(@"C:\Users\demo\file.txt"),
+                }))
+    .WithName("GetPlatform");
 
 app.Run();
 

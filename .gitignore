@@ -12,6 +12,7 @@ dist/
 # --- .NET ---
 **/bin/
 **/obj/
+**/artifacts/
 
 # User-specific files
 *.user
