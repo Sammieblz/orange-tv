@@ -31,6 +31,8 @@ Examples:
 
 - `ORANGETV_API__Data__SqlitePath=C:/path/to/orange-tv.db`
 - `ORANGETV_API__Features__EnableDiagnostics=true`
+- `ORANGETV_API__BrowserShell__Enabled=false`
+- `ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium-browser`
 
 ## Paths (Windows + Linux)
 
@@ -43,4 +45,3 @@ When documenting paths:
 
 - See `.env.example` for current variable examples.
 - For backend defaults, `.NET` launch settings may also define ports/URLs during development.
-
