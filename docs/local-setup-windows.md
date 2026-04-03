@@ -53,10 +53,12 @@ npm run dev
 
 This starts:
 
-- **Launcher**: Vite dev server (default **`http://localhost:5173/`**)
-- **API**: `dotnet watch` for `api/OrangeTv.Api.csproj` (default **`http://localhost:5144/`** per `api/Properties/launchSettings.json`)
+- **Launcher**: Vite dev server at **`http://localhost:5173/`** (see the terminal for the exact URL).
+- **API**: `dotnet watch` for `api/OrangeTv.Api.csproj` — default **`http://localhost:5144/`** (see `api/Properties/launchSettings.json`).
 
 Leave this terminal open. Stop with **Ctrl+C** (stops both processes).
+
+**Linux validation** is a separate step: clone the repo **inside** your Ubuntu VM, `git pull`, and run **`npm run dev`** there — see [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
 
 ## First-run smoke test checklist
 

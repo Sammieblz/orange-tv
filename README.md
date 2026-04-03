@@ -47,6 +47,8 @@ Development is happening in three stages:
 
 - First Linux validation target
 - Used to verify kiosk behavior, process recovery, playback flow, and platform assumptions before hardware arrives
+- **End-of-sprint gate:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)
+- **Cross-environment expectations (v1):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
 ### Target mini PC hardware
 
@@ -181,7 +183,9 @@ Planned capabilities (tracked in the full plan):
 
 **Windows (step-by-step, clone to smoke test):** see [`docs/local-setup-windows.md`](docs/local-setup-windows.md). It covers prerequisites, install commands, first-run verification, and known gaps so you are not guessing.
 
-**Ubuntu VM (Linux validation target):** see [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) for prerequisites, install, and a smoke checklist aligned with Windows.
+**Ubuntu VM (Linux validation target):** see [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) — develop on Windows, then **`git pull`** and **`npm run dev`** in a **Linux clone inside the VM** for sprint checks (see [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)).
+
+**Sprint validation on Linux:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix (Windows / VM / hardware):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
 **Git branches and commits:** see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
@@ -212,7 +216,7 @@ The intended local development flow is:
 1. Run the local .NET service
 2. Run the React launcher (Vite today; Electron shell planned)
 3. Develop and test features on Windows
-4. Re-validate launcher flows in Ubuntu VM at the end of each sprint
+4. Re-validate launcher flows in Ubuntu VM at the end of each sprint (use [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md))
 
 ### Suggested commands (from repository root)
 
@@ -348,7 +352,8 @@ As the repository evolves, this README should be supported by:
 - `docs/architecture.md`
 - `docs/launch-flow.md`
 - `docs/hardware-bringup-checklist.md`
-- `docs/testing-matrix.md`
+
+**Testing matrix v1** is tracked in [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md) (revise the version when columns or tiers change).
 
 ## Status
 
