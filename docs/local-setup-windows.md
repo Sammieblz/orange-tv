@@ -55,6 +55,7 @@ This starts:
 
 - **Launcher**: Vite dev server at **`http://localhost:5173/`** (see the terminal for the exact URL).
 - **API**: `dotnet watch` for `api/OrangeTv.Api.csproj` — default **`http://localhost:5144/`** (see `api/Properties/launchSettings.json`).
+- **Shell**: the API will auto-launch the launcher in a Chromium/Chrome app window once the Vite URL is reachable.
 
 Leave this terminal open. Stop with **Ctrl+C** (stops both processes).
 
@@ -67,7 +68,7 @@ Use this after a clean clone + `npm run setup` + `npm run dev`.
 ### Launcher (Vite)
 
 - [ ] Terminal shows Vite “ready” and **Local:** `http://localhost:5173/`
-- [ ] Browser opens `http://localhost:5173/` and the default Vite + React page loads (no blank error page)
+- [ ] Chromium/Chrome opens automatically and the launcher page loads (no blank error page)
 - [ ] DevTools console has **no red uncaught errors** on first load
 
 ### API (ASP.NET Core)
@@ -102,6 +103,7 @@ These are **intentional** at this stage; they are listed so you do not assume mi
 | Gap | What it means |
 | --- | --- |
 | **No Electron shell yet** | `launcher/` is **Vite + React in the browser**, not the future Electron kiosk window described in the README/plan |
+| **Browser shell dependency** | Auto-launch prefers `chromium-browser` / `chromium` / Chrome on PATH; set `ORANGETV_API__BrowserShell__ExecutablePath` if your browser lives elsewhere |
 | **Chrome / MPV / FFprobe not wired** | Prerequisites in the README are **forward-looking**; the current API does not spawn Chrome or MPV |
 | **Launcher does not call the API by default** | The smoke test verifies **both processes** independently; UI integration is a separate milestone |
 | **Two `node_modules` folders** | Root holds orchestration deps (e.g. `concurrently`); `launcher/` holds the frontend app deps |

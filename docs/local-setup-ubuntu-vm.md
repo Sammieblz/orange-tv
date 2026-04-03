@@ -78,6 +78,7 @@ Expected:
 
 - Vite: **`http://localhost:5173/`** (or the host shown in the terminal)
 - API: **`http://localhost:5144/`** by default (see `api/Properties/launchSettings.json`)
+- Chromium/Chrome app window opens automatically once the launcher URL is reachable
 
 ## Testing from inside the VM
 
@@ -95,7 +96,7 @@ Mirror [`local-setup-windows.md`](local-setup-windows.md) with Linux equivalents
 
 - [ ] `npm run setup` completes without errors
 - [ ] `npm run dev` starts both processes; no immediate crash
-- [ ] Browser loads **`http://localhost:5173/`** and the Vite app renders
+- [ ] Chromium/Chrome opens automatically and the Vite app renders
 - [ ] `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/weatherforecast` prints **`200`**
 - [ ] Optional: `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/api/v1/system/platform` prints **`200`** (response should show `isLinux: true` on Ubuntu)
 
