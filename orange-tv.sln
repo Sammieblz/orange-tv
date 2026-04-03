@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "api", "api", "{D82C56D6-B2CD-F611-9E31-04638F7EC30E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrangeTv.Api", "api\OrangeTv.Api.csproj", "{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{05B11BFB-E8BC-D4C1-A185-FFFEE1F51E8B} = {D82C56D6-B2CD-F611-9E31-04638F7EC30E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {67F6F8F7-60F5-432E-BA01-41402774D92C}
+	EndGlobalSection
+EndGlobal
