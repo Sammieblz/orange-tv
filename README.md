@@ -189,6 +189,8 @@ The product is designed to **ship on Ubuntu** (appliance / mini PC). You can **d
 
 **Sprint validation on Linux:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix (Windows / VM / hardware):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
+**Launcher TV focus (arrow keys, Enter, Escape):** [`docs/focus-navigation.md`](docs/focus-navigation.md)
+
 **Git branches and commits:** see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Prerequisites
