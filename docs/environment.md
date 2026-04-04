@@ -40,6 +40,19 @@ When you run **`npm run dev:electron`**, you usually want **one** shell window. 
 
 When starting **Electron** from a shell, you can override the dev URL with **`VITE_DEV_SERVER_URL`** (read by **`launcher/electron/main.cjs`** from the process environment — it is **not** supplied via Vite’s `import.meta.env`).
 
+### Electron shell (main process)
+
+These are read by **`launcher/electron/main.cjs`** and **`launcher/electron/preload.cjs`** from **`process.env`**. They are **not** injected from `.env` automatically unless your shell or tooling exports them (Node does not load repo `.env` for `npm run electron` unless you add something like `dotenv-cli`).
+
+| Variable | Purpose |
+| --- | --- |
+| **`ELECTRON_IS_DEV`** | Set to **`1`** by **`npm run electron`** (dev URL load). Unset for **`electron:prod`** (`dist/index.html`). |
+| **`ORANGETV_ELECTRON__SHELL_PROFILE`** | **`appliance`**: fullscreen shell, minimal metadata exposed to renderer via preload. Omit / other: windowed (dev-sized) or centered window for production builds on desktop. |
+| **`ORANGETV_ELECTRON__KIOSK`** | **`1`** / **`true`**: enable Electron **`kiosk`** (stricter than fullscreen alone). |
+| **`ORANGETV_ELECTRON__OPEN_DEVTOOLS`** | **`1`** / **`true`**: open DevTools when **`ELECTRON_IS_DEV`** is set and profile is **not** appliance. |
+
+**Shell logs:** main-process diagnostics use the prefix **`[OrangeTv:shell]`** on **stderr** (load failures, render-process-gone, unhandled errors). See [`electron-shell.md`](electron-shell.md).
+
 ## Paths (Windows + Linux)
 
 When documenting paths:

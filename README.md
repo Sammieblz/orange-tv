@@ -227,7 +227,7 @@ npm run dev:electron
 npm run design-system
 ```
 
-The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** (bound to **`127.0.0.1:5173`** in `launcher/vite.config.ts`; **`localhost`** still works in the browser) by default. **Electron**, **BrowserShell**, and **Ubuntu-specific** notes: [`docs/local-setup-windows.md`](docs/local-setup-windows.md) and [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
+The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** (bound to **`127.0.0.1:5173`** in `launcher/vite.config.ts`; **`localhost`** still works in the browser) by default. **Electron**, **BrowserShell**, and **Ubuntu-specific** notes: [`docs/local-setup-windows.md`](docs/local-setup-windows.md), [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md), and [`docs/electron-shell.md`](docs/electron-shell.md).
 
 > **Note:** Exact scripts may evolve as the monorepo grows; `docs/local-setup-windows.md` stays the concrete Windows reference.
 
