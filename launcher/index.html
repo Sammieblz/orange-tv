@@ -4,10 +4,28 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>launcher</title>
+    <title>Orange TV</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root">
+      <div
+        style="
+          min-height: 100vh;
+          margin: 0;
+          padding: 2rem;
+          background: #0a0a0a;
+          color: #fff;
+          font-family: Inter, system-ui, sans-serif;
+        "
+      >
+        Loading Orange TV…
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <p style="padding: 2rem; background: #0a0a0a; color: #fff">
+        Enable JavaScript to run the launcher.
+      </p>
+    </noscript>
   </body>
 </html>

@@ -11,6 +11,10 @@ Platform-specific and cross-cutting automation lives here so the **Windows dev l
 
 The repository root **`package.json`** remains the **canonical** way to run `npm run dev` on any OS where Node and .NET are installed.
 
+| Path | Role |
+| --- | --- |
+| `generate-design-system.mjs` | Optional: runs ui-ux-pro-max `search.py --design-system --persist` when `.cursor/skills/ui-ux-pro-max` exists; flattens output into `docs/design-system/MASTER.md`. Invoked via **`npm run design-system`**. |
+
 ## Principles
 
 - **Do not** fork business logic into shell scripts when it belongs in `api/` (e.g. launch orchestration). Scripts should bootstrap environments or call documented commands.

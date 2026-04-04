@@ -1,0 +1,23 @@
+:root {
+  /* Typography: frontend skill — Plus Jakarta Sans + Inter (loaded in index.html). */
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  --color-bg: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface-mid: #1e1e1e;
+  --color-orange: #ff6b00;
+  --color-orange-glow: #ff8c38;
+  --color-text: #ffffff;
+  --color-muted: #a0a0a0;
+  --focus-ring: 0 0 0 3px #ff6b00, 0 0 20px rgba(255, 107, 0, 0.4);
+  --transition-fast: 120ms ease-out;
+  --transition-medium: 240ms ease-out;
+  /* Skill timing: sidebar width ~200ms, hero ambient ~600ms */
+  --transition-sidebar: 200ms ease-out;
+  --transition-hero: 600ms ease-out;
+  --radius-tile: 12px;
+  --radius-card: 8px;
+  --sidebar-width: 72px;
+  --sidebar-width-expanded: 200px;
+}

@@ -7,6 +7,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "DevLauncher",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 builder.Services.Configure<BrowserShellOptions>(builder.Configuration.GetSection(BrowserShellOptions.SectionName));
 builder.Services.AddHostedService<ChromiumShellHostedService>();
@@ -16,6 +27,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors("DevLauncher");
     app.MapOpenApi();
 }
 else
