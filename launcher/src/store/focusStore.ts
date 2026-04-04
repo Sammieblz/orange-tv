@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-/** Where keyboard focus lives in the TV shell; safe to extend for overlays later. */
+/** Where keyboard focus lives in the TV shell; transitions in `navigation/focusNavigation.ts`. Overlays: see `docs/focus-navigation.md`. */
 export type FocusSection = "sidebar" | "hero" | "row";
 
 export interface FocusSnapshot {

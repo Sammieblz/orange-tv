@@ -23,7 +23,11 @@ export function LauncherPage() {
     >
       <Hero content={home.hero} focused={focus.section === "hero"} />
       {home.rows.map((row, rowIndex) => (
-        <ContentRow key={row.id} title={row.title}>
+        <ContentRow
+          key={row.id}
+          title={row.title}
+          isFocusedRow={focus.section === "row" && focus.rowIndex === rowIndex}
+        >
           {row.tiles.map((tile, colIndex) => (
             <Tile
               key={tile.id}

@@ -115,6 +115,7 @@ Use this after a clean clone + `npm run setup` + `npm run dev`.
 - [ ] Chromium/Chrome opens automatically and the launcher page loads (no blank error page), **or** you use `npm run dev:electron` with BrowserShell disabled
 - [ ] DevTools console has **no red uncaught errors** on first load
 - [ ] Footer **API** strip shows **connected** when the API is up (launcher calls `GET /api/v1/system/platform` cross-origin)
+- [ ] **Keyboard:** arrows move logical focus (sidebar, hero, tile rows); **Enter** logs activation; **Escape** from hero/rows returns to sidebar — see [`focus-navigation.md`](focus-navigation.md)
 
 ### API (ASP.NET Core)
 

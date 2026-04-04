@@ -111,6 +111,7 @@ Details: [`environment.md`](environment.md), [`electron-shell.md`](electron-shel
 | API | `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/weatherforecast` → **200** |
 | Platform | `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/api/v1/system/platform` → **200** (expect **`isLinux":true`** on Ubuntu) |
 | Launcher | Open **`http://localhost:5173/`** in Firefox/Chromium after **`npm run dev`** |
+| TV keyboard | Arrow keys / **Enter** / **Escape** behavior is documented in [`focus-navigation.md`](focus-navigation.md) |
 
 Install **`curl`** if needed: `sudo apt install -y curl`.
 
