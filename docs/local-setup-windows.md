@@ -83,6 +83,16 @@ npm run electron:prod
 
 **`electron:prod`** does **not** set **`ELECTRON_IS_DEV`**, so Electron loads **`dist/index.html`**. The **`npm run electron`** script is for **dev URL** loads only. The API must still be running separately if the UI calls it.
 
+**Fullscreen / appliance-style Electron:** set main-process env vars when launching (they are **not** read from `.env` unless you export them). Example in PowerShell before **`npm run dev:electron`** or from **`launcher/`** for **`npm run electron`**:
+
+```powershell
+$env:ORANGETV_ELECTRON__SHELL_PROFILE = "appliance"
+# Optional stricter kiosk:
+# $env:ORANGETV_ELECTRON__KIOSK = "1"
+```
+
+See [`environment.md`](environment.md) and [`electron-shell.md`](electron-shell.md).
+
 **Linux validation** is a separate step: clone the repo **inside** your Ubuntu VM, `git pull`, and run **`npm run dev`** there — see [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
 
 ## Troubleshooting
@@ -93,6 +103,7 @@ npm run electron:prod
 | **`npm run dev:electron`** shows only **`[vite]`**, never **`[electron]`** | **`wait-on`** never saw the dev server (older setups probed **`127.0.0.1`** while Vite listened only on IPv6) | Use current `launcher/` (Vite **`host: 127.0.0.1`** + **`wait-on http-get://127.0.0.1:5173`**). Stop the command and run **`npm run dev:electron`** again |
 | **Port 5173 already in use** | Another Vite or process holds the port | Stop the other process, or temporarily change **`server.port`** in `launcher/vite.config.ts` and align **CORS** origins in `api/Program.cs` if you change the launcher origin |
 | **API footer shows error** | API not running or wrong base URL | Start **`npm run dev:api`** (or **`npm run dev`**). Set **`VITE_ORANGETV_API_BASE_URL`** in `.env` if the API is not on **`http://localhost:5144`** |
+| **Electron shell issues / logging** | Need IPC or env reference | See [`electron-shell.md`](electron-shell.md); shell diagnostics on **stderr** with **`[OrangeTv:shell]`** |
 
 ## First-run smoke test checklist
 

@@ -88,6 +88,16 @@ npm --prefix launcher run build
 cd launcher && npm run electron:prod
 ```
 
+**Fullscreen / appliance-style shell** (e.g. mini PC or VM with display):
+
+```bash
+export ORANGETV_ELECTRON__SHELL_PROFILE=appliance
+# Optional: ORANGETV_ELECTRON__KIOSK=1
+npm run dev:electron
+```
+
+Details: [`environment.md`](environment.md), [`electron-shell.md`](electron-shell.md).
+
 ## Environment and data paths (Ubuntu)
 
 - Copy **`.env.example`** to **`.env`** for overrides; see [`environment.md`](environment.md).
