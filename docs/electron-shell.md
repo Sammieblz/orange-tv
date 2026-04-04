@@ -15,8 +15,9 @@ The TV launcher can run inside **Electron** (`launcher/electron/`). The **main**
 | **`ping()`** | `orange-tv:ping` | Health check; returns `"pong"`. |
 | **`launchRequest(payload)`** | `orange-tv:launch-request` | Validates `payload` in main (`kind` string, optional `id` string). Currently returns **`not-implemented`** after logging; reserved for forwarding to the .NET service. |
 | **`getRuntimeMetadata()`** | _(sync in preload)_ | **Appliance** profile: minimal object (`shellProfile`, `channel`). **Dev** / default: includes engine versions; **non-dev** production omits raw **Node** version. |
+| **`onShellForeground(cb)`** | `orange-tv:shell-foreground` (main **sends** after window was blurred then focused again) | Subscribe for focus-recovery when returning from an external app; returns unsubscribe. |
 
-Channel names are defined once in [`launcher/electron/ipc-contract.cjs`](../launcher/electron/ipc-contract.cjs).
+Invoke-style channels are registered in main; **`SHELL_FOREGROUND`** is **push-only** from main to renderer. All names live in [`launcher/electron/ipc-contract.cjs`](../launcher/electron/ipc-contract.cjs).
 
 ## Logging and failures
 
@@ -36,3 +37,4 @@ See **[`environment.md`](environment.md)** → *Electron shell (main process)* a
 
 - Windows: [`local-setup-windows.md`](local-setup-windows.md) — **Electron shell** section
 - Ubuntu: [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md) — **Electron**
+- Gamepad + focus checkpoint / shell return: [`gamepad-focus-recovery.md`](gamepad-focus-recovery.md)

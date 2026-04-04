@@ -9,4 +9,19 @@ contextBridge.exposeInMainWorld("orangeTv", {
 
   /** Runtime metadata; minimal in appliance profile (no raw Node version). */
   getRuntimeMetadata: () => Promise.resolve(shellProfile.getRuntimeMetadataPayload()),
+
+  /**
+   * Subscribe to main-window focus after a prior blur (return from external app / Alt-Tab).
+   * @returns Unsubscribe function.
+   */
+  onShellForeground: (callback) => {
+    const channel = CHANNELS.SHELL_FOREGROUND;
+    const listener = () => {
+      callback();
+    };
+    ipcRenderer.on(channel, listener);
+    return () => {
+      ipcRenderer.removeListener(channel, listener);
+    };
+  },
 });

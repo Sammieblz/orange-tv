@@ -2,6 +2,8 @@
 
 The TV launcher uses a **deterministic focus snapshot** in Zustand (`useFocusStore`), not browser DOM focus order, for predictable D-pad / arrow-key behavior.
 
+**Gamepad** uses the same transitions; **checkpoints and shell return** are documented in [`gamepad-focus-recovery.md`](gamepad-focus-recovery.md).
+
 ## Focus snapshot (`FocusSnapshot`)
 
 | Field | Meaning |
@@ -13,7 +15,9 @@ The TV launcher uses a **deterministic focus snapshot** in Zustand (`useFocusSto
 
 Implementation: [`launcher/src/store/focusStore.ts`](../launcher/src/store/focusStore.ts).  
 Pure transitions: [`launcher/src/navigation/focusNavigation.ts`](../launcher/src/navigation/focusNavigation.ts).  
-Keyboard wiring: [`launcher/src/hooks/useLauncherKeyboard.ts`](../launcher/src/hooks/useLauncherKeyboard.ts).
+Keyboard wiring: [`launcher/src/hooks/useLauncherKeyboard.ts`](../launcher/src/hooks/useLauncherKeyboard.ts).  
+Gamepad wiring: [`launcher/src/hooks/useLauncherGamepad.ts`](../launcher/src/hooks/useLauncherGamepad.ts).  
+Shared dispatch: [`launcher/src/hooks/useFocusInputDispatch.ts`](../launcher/src/hooks/useFocusInputDispatch.ts).
 
 ## Key map (default)
 
