@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "kill-port 5173 && vite",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "node ./node_modules/eslint/bin/eslint.js . --fix",
     "format": "node ./node_modules/prettier/bin/prettier.cjs . --write",
@@ -14,15 +14,22 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
+    "kill-port": "2.0.1",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.43.0",
-    "vite": "^5.4.21"
+    "vite": "5.4.21"
   },
   "dependencies": {
-    "orange-tv": "file:.."
+    "iconoir-react": "^7.11.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.3"
   }
 }

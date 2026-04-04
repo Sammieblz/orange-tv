@@ -1,0 +1,86 @@
+.tile,
+.tileFocused,
+.tileDisabled {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.tile {
+  transform: scale(1);
+}
+
+.tileFocused {
+  transform: scale(1.08);
+  z-index: 1;
+  box-shadow: var(--focus-ring);
+}
+
+.tileDisabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-tile);
+  background: linear-gradient(145deg, var(--color-surface-mid), var(--color-surface));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tileFocused .art {
+  border-color: rgba(255, 107, 0, 0.45);
+}
+
+.placeholder {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+}
+
+.caption {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--color-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tileFocused .caption {
+  color: var(--color-text);
+}
+
+.progressTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-orange), var(--color-orange-glow));
+  border-radius: 2px;
+}

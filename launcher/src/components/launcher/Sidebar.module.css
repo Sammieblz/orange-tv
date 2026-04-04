@@ -1,0 +1,96 @@
+.rail {
+  flex-shrink: 0;
+  width: var(--sidebar-width);
+  padding: 24px 8px;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-surface-mid);
+  overflow: hidden;
+  transition:
+    width var(--transition-sidebar),
+    padding var(--transition-sidebar);
+}
+
+.railExpanded {
+  width: var(--sidebar-width-expanded);
+  padding: 24px 12px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item,
+.itemActive,
+.itemFocused {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: var(--radius-card);
+  color: var(--color-muted);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.rail:not(.railExpanded) .item,
+.rail:not(.railExpanded) .itemActive,
+.rail:not(.railExpanded) .itemFocused {
+  justify-content: center;
+  padding-inline: 8px;
+}
+
+.iconWrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width var(--transition-sidebar),
+    opacity var(--transition-fast);
+}
+
+.railExpanded .label {
+  max-width: 140px;
+  opacity: 1;
+}
+
+.itemActive {
+  color: var(--color-text);
+  background: var(--color-surface-mid);
+}
+
+.itemActive .icon {
+  color: var(--color-orange-glow);
+}
+
+.itemFocused {
+  color: var(--color-text);
+  background: var(--color-surface-mid);
+  transform: scale(1.04);
+  box-shadow: var(--focus-ring);
+}
+
+.itemFocused .icon {
+  color: var(--color-orange);
+}
