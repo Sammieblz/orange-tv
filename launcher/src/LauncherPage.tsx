@@ -1,11 +1,12 @@
-import { SEED_HOME } from "./data/seedHome";
-import { useLauncherKeyboard } from "./hooks/useLauncherKeyboard";
-import { AppShell } from "./components/launcher/AppShell";
-import { ContentRow } from "./components/launcher/ContentRow";
-import { Hero } from "./components/launcher/Hero";
-import { Sidebar } from "./components/launcher/Sidebar";
-import { Tile } from "./components/launcher/Tile";
-import { useFocusStore } from "./store/focusStore";
+import { ApiStatusBar } from "@/components/ApiStatusBar/ApiStatusBar.tsx";
+import { AppShell } from "@/components/AppShell/AppShell.tsx";
+import { ContentRow } from "@/components/ContentRow/ContentRow.tsx";
+import { Hero } from "@/components/Hero/Hero.tsx";
+import { Sidebar } from "@/components/Sidebar/Sidebar.tsx";
+import { Tile } from "@/components/Tile/Tile.tsx";
+import { SEED_HOME } from "@/data/seedHome.ts";
+import { useLauncherKeyboard } from "@/hooks/useLauncherKeyboard.ts";
+import { useFocusStore } from "@/store/focusStore.ts";
 
 export function LauncherPage() {
   const home = SEED_HOME;
@@ -18,6 +19,7 @@ export function LauncherPage() {
       sidebar={
         <Sidebar items={home.nav} section={focus.section} sidebarIndex={focus.sidebarIndex} />
       }
+      footer={<ApiStatusBar />}
     >
       <Hero content={home.hero} focused={focus.section === "hero"} />
       {home.rows.map((row, rowIndex) => (

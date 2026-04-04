@@ -5,17 +5,12 @@
   border-radius: var(--radius-card);
   overflow: hidden;
   background: linear-gradient(135deg, #1a1208 0%, #0a0a0a 45%, #141820 100%), var(--color-surface);
-  filter: brightness(1);
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    filter var(--transition-hero);
+  transform-origin: center top;
+  will-change: transform, filter;
 }
 
 .heroFocused {
-  transform: scale(1.02);
   box-shadow: var(--focus-ring);
-  filter: brightness(1.06);
 }
 
 .inner {

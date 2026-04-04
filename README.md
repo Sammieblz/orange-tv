@@ -39,14 +39,13 @@ Development is happening in three stages:
 
 ### Windows development workstation
 
-- Primary build environment
-- Fastest feedback loop for Electron, React, .NET, and SQLite
-- Used for most feature implementation
+- Common choice for editors and GPU tooling
+- Same `npm` / `dotnet` commands as Ubuntu
 
-### Ubuntu VM validation
+### Ubuntu (VM, bare metal, mini PC)
 
-- First Linux validation target
-- Used to verify kiosk behavior, process recovery, playback flow, and platform assumptions before hardware arrives
+- **Runtime reference** for the appliance and Linux behavior
+- Use [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) for Chromium/BrowserShell, paths, and headless notes
 - **End-of-sprint gate:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)
 - **Cross-environment expectations (v1):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
@@ -172,8 +171,8 @@ Planned capabilities (tracked in the full plan):
 
 ## Development principles
 
-- Build the fastest possible loop on Windows first
-- Validate Linux assumptions continuously in Ubuntu VM
+- Build a fast inner loop on your workstation (Windows or Ubuntu)
+- Treat **Ubuntu** as the **runtime reference** for appliance behavior; validate continuously in a VM or on hardware
 - Keep hardware-specific work isolated until the device arrives
 - Favor stable, explainable behavior over premature complexity
 - Use deterministic recommendation logic before ML
@@ -181,9 +180,12 @@ Planned capabilities (tracked in the full plan):
 
 ## Getting started
 
-**Windows (step-by-step, clone to smoke test):** see [`docs/local-setup-windows.md`](docs/local-setup-windows.md). It covers prerequisites, install commands, first-run verification, and known gaps so you are not guessing.
+The product is designed to **ship on Ubuntu** (appliance / mini PC). You can **develop on Windows**, **develop on Ubuntu**, or **validate on an Ubuntu VM** — the same root scripts apply.
 
-**Ubuntu VM (Linux validation target):** see [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) — develop on Windows, then **`git pull`** and **`npm run dev`** in a **Linux clone inside the VM** for sprint checks (see [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)).
+| Environment | Doc |
+| --- | --- |
+| **Ubuntu** (bare metal, VM, or target hardware) | [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) — primary runtime guide |
+| **Windows** workstation | [`docs/local-setup-windows.md`](docs/local-setup-windows.md) — PowerShell, Chrome paths, Windows-specific notes |
 
 **Sprint validation on Linux:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix (Windows / VM / hardware):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
@@ -191,32 +193,22 @@ Planned capabilities (tracked in the full plan):
 
 ### Prerequisites
 
-Recommended local tools:
+**Core (all platforms):** Node.js LTS, npm, .NET SDK (see `api/*.csproj`), Git.
 
-- Node.js LTS
-- npm
-- .NET SDK (see `api/*.csproj` for target framework)
-- Git
-- Google Chrome
-- MPV
-- FFprobe
+**Ubuntu:** Install **Chromium** or **Chrome** if you use **`npm run dev`** with **BrowserShell** enabled (auto-opens the launcher). See [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
 
-Optional but recommended:
+**Windows:** Chrome may already be present; BrowserShell can use installed Chrome. See [`docs/local-setup-windows.md`](docs/local-setup-windows.md).
 
-- VS Code
-- SQLite viewer extension
-- Ubuntu 24.04 VM for Linux validation
+**Forward-looking** (streaming / local playback in the plan): MPV, FFprobe — not required for the current scaffold smoke test.
 
-Chrome, MPV, and FFprobe are **forward-looking** for streaming and local playback; the current scaffold smoke test only needs Node, npm, and .NET. Details are in `docs/local-setup-windows.md`.
+**Optional:** VS Code, SQLite viewer extension, Ubuntu 24.04 VM or device matching the appliance target.
 
 ### Local development workflow
 
-The intended local development flow is:
-
-1. Run the local .NET service
-2. Run the React launcher (Vite today; Electron shell planned)
-3. Develop and test features on Windows
-4. Re-validate launcher flows in Ubuntu VM at the end of each sprint (use [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md))
+1. Run the local .NET service and the **Vite** launcher (**`npm run dev`** at the repo root runs both).
+2. Optionally use **`npm run dev:electron`** (with **BrowserShell** disabled if you want only Electron) — see [`docs/local-setup-windows.md`](docs/local-setup-windows.md) or [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
+3. **On Windows:** iterate locally; **on Ubuntu:** use the same commands as the target OS.
+4. If your main editor is on Windows, still **validate on Ubuntu** regularly (VM or device) using [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md).
 
 ### Suggested commands (from repository root)
 
@@ -224,11 +216,18 @@ The intended local development flow is:
 # one-shot install: root deps, launcher deps, dotnet restore
 npm run setup
 
-# start Vite (launcher) and API together
+# start Vite (launcher) and API together (API may auto-open Chromium for the launcher URL)
 npm run dev
+
+# optional: Vite + Electron — run the API in another terminal (npm run dev:api).
+# Set ORANGETV_API__BrowserShell__Enabled=false in .env to avoid a second Chrome window.
+npm run dev:electron
+
+# optional: regenerate committed design-system docs (Python + local Cursor skill)
+npm run design-system
 ```
 
-The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** by default (see `api/Properties/launchSettings.json`). A first-run checklist is in `docs/local-setup-windows.md`.
+The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** (bound to **`127.0.0.1:5173`** in `launcher/vite.config.ts`; **`localhost`** still works in the browser) by default. **Electron**, **BrowserShell**, and **Ubuntu-specific** notes: [`docs/local-setup-windows.md`](docs/local-setup-windows.md) and [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
 
 > **Note:** Exact scripts may evolve as the monorepo grows; `docs/local-setup-windows.md` stays the concrete Windows reference.
 
@@ -340,7 +339,7 @@ The launcher, local service, and playback flow must be stable before expanding i
 
 - Repo bootstrap
 - Ubuntu VM contract environment
-- Electron shell
+- Electron packaging, auto-update, and installer signing (dev shell + `dev:electron` exist today)
 - TV-style navigation
 - Local API + SQLite
 - Chrome/MPV launch orchestration

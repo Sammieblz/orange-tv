@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import type { HomeScreenData } from "../data/seedHome";
-import { useFocusStore } from "../store/focusStore";
+import type { HomeScreenData } from "@/data/seedHome.ts";
+import { useFocusStore } from "@/store/focusStore.ts";
 
 function firstEnabledCol(tiles: { disabled?: boolean }[], preferred: number): number {
   if (tiles.length === 0) return 0;

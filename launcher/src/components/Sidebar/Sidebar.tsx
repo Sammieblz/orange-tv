@@ -1,7 +1,9 @@
 import type { ComponentType, SVGProps } from "react";
+import { useLayoutEffect, useRef } from "react";
+import { gsap } from "gsap";
 import { AppWindow, BookStack, HomeSimple, Settings } from "iconoir-react";
-import type { NavItem } from "../../data/seedHome";
-import type { FocusSection } from "../../store/focusStore";
+import type { NavItem } from "@/data/seedHome.ts";
+import type { FocusSection } from "@/store/focusStore.ts";
 import styles from "./Sidebar.module.css";
 
 const navIcons: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -12,6 +14,16 @@ const navIcons: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
 };
 
 const iconSize = 24;
+const WIDTH_COLLAPSED = 72;
+const WIDTH_EXPANDED = 200;
+
+const iconProps = {
+  className: styles.icon,
+  width: iconSize,
+  height: iconSize,
+  strokeWidth: 1.5,
+  color: "currentColor" as const,
+};
 
 interface SidebarProps {
   items: NavItem[];
@@ -21,25 +33,34 @@ interface SidebarProps {
 
 function NavIcon({ id }: { id: string }) {
   const Icon = navIcons[id] ?? AppWindow;
-  return (
-    <Icon
-      className={styles.icon}
-      width={iconSize}
-      height={iconSize}
-      strokeWidth={1.5}
-      color="currentColor"
-    />
-  );
+  return <Icon {...iconProps} />;
 }
 
 export function Sidebar({ items, section, sidebarIndex }: SidebarProps) {
   const expanded = section === "sidebar";
+  const railRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    const ctx = gsap.context(() => {
+      gsap.to(el, {
+        width: expanded ? WIDTH_EXPANDED : WIDTH_COLLAPSED,
+        duration: 0.2,
+        ease: "power2.out",
+        overwrite: "auto",
+      });
+    }, railRef);
+    return () => ctx.revert();
+  }, [expanded]);
 
   return (
     <nav
+      ref={railRef}
       className={`${styles.rail} ${expanded ? styles.railExpanded : ""}`}
       aria-label="Main"
       data-expanded={expanded ? "true" : "false"}
+      style={{ width: WIDTH_COLLAPSED }}
     >
       <ul className={styles.list}>
         {items.map((item, i) => {

@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
     "target": "ES2023",
     "useDefineForClassFields": true,
     "module": "ESNext",

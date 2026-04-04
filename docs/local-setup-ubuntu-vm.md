@@ -1,66 +1,51 @@
-# Ubuntu VM local setup (validation target)
+# Ubuntu local setup (target OS)
 
-This document is the **placeholder and checklist** for running Orange TV on **Ubuntu** (VM or bare metal) so Linux assumptions are validated without blocking day-to-day **Windows** development.
+**Ubuntu 24.04 LTS** is the **appliance and validation OS** in the project plan. Use this guide when you run Orange TV **on Ubuntu itself** — bare metal, VM, or mini PC — not only as a “someday” check from Windows.
 
-For the full Windows path (clone → smoke test), see [`local-setup-windows.md`](local-setup-windows.md).
+- **Windows-focused setup** (PowerShell, Windows paths): [`local-setup-windows.md`](local-setup-windows.md)
+- **Sprint Linux gate:** [`linux-smoke-checklist.md`](linux-smoke-checklist.md) · **Cross-environment matrix:** [`testing-matrix-v1.md`](testing-matrix-v1.md)
 
-**End-of-sprint Linux gate (broader than install smoke):** [`linux-smoke-checklist.md`](linux-smoke-checklist.md) · **Cross-environment matrix:** [`testing-matrix-v1.md`](testing-matrix-v1.md).
+## Who this is for
 
-## Purpose
-
-- Match the **target appliance OS** (Ubuntu 24.04 LTS per project plan) early.
-- Verify **paths**, **line endings** in configs, and **process launch** behavior before hardware bring-up.
-- Keep **Windows** as the fastest inner loop; Ubuntu is a **scheduled validation** step (e.g. end of sprint).
-
-## Workflow: develop on Windows, validate in the VM
-
-| Role | Where |
+| Situation | What to do |
 | --- | --- |
-| **Daily development** | Windows — editor, **`npm run dev`**, Git commits |
-| **Linux validation** | Ubuntu VM — **native clone** of the repo, **`git pull`**, **`npm run setup`** when deps change, **`npm run dev`** in the VM |
+| **Daily development on Ubuntu** | Follow **Clone and install** and **Run (development)** below; same `package.json` commands as Windows. |
+| **Develop on Windows, validate on Ubuntu** | Keep a **native Linux clone** (not a Windows shared folder), `git pull`, `npm run setup` when deps change, then **`npm run dev`** in the guest. |
+| **Headless server / SSH only** | **BrowserShell** and **Electron** need a **display**. Use **`ORANGETV_API__BrowserShell__Enabled=false`**, run **`npm run dev:api`** + **`npm --prefix launcher run dev`**, and open **`http://<host>:5173`** from a machine that has a browser, or use **`curl`** against **`5144`**. Adjust firewall and Vite **`server.host`** if you bind beyond loopback (advanced). |
 
-1. On **Windows:** work as usual; push when you want the VM to pick up changes.
-2. In the **VM:** open a terminal, `cd` to your clone (e.g. `~/src/orange-tv`), **`git pull`**, then **`npm run setup`** if `package-lock.json`, launcher deps, or the API project changed.
-3. Run **`npm run dev`** **inside the VM** and use **`http://localhost:5173/`** and **`http://localhost:5144/`** in a browser or `curl` **in the guest**.
+## Prerequisites (Ubuntu)
 
-**Why not a VirtualBox shared folder as the repo?** A working tree on a Windows-mounted share often breaks **`node_modules`** (symlinks, permissions). Keep a **Linux filesystem clone** and sync with **Git**.
+Install on the machine or VM:
 
-### Routine validation
+| Tool | Purpose |
+| --- | --- |
+| **Git** | Clone |
+| **Node.js LTS** + **npm** | [NodeSource](https://github.com/nodesource/distributions) or your approved install |
+| **.NET SDK** | Match `api/*.csproj` — [Download .NET](https://dotnet.microsoft.com/download) |
+| **A graphical session** | **BrowserShell** (Chromium/Chrome app window) and **Electron** need Wayland or X11 with a logged-in desktop (or a remote desktop that provides `DISPLAY`). |
+
+**Browser for dev `npm run dev`:** In Development, the API’s **BrowserShell** tries, in order: **`chromium-browser`**, **`chromium`**, **`google-chrome`**, **`google-chrome-stable`** (see `api/Shell/ChromiumShellHostedService.cs`). Install at least one:
 
 ```bash
-cd ~/src/orange-tv
-git pull
-npm run setup   # when package-lock, launcher deps, or api project changed; skip if you are sure nothing changed
-npm run dev
+sudo apt update
+# Typical Ubuntu: Chromium (package name may be chromium-browser as a transitional name, or chromium)
+sudo apt install -y chromium-browser || sudo apt install -y chromium
 ```
 
-Then open **`http://localhost:5173/`** in a browser **inside the VM**.
+If auto-launch logs **“Unable to auto-launch Chromium shell”**, set an explicit binary in `.env`:
 
-## VM recommendation (baseline)
+```bash
+# Example — use the path from: command -v chromium || command -v google-chrome-stable
+ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium
+```
 
-| Item | Suggestion |
-| --- | --- |
-| OS | **Ubuntu 24.04 LTS** (desktop or server + desktop packages if you need a GUI for Chrome/MPV tests) |
-| Resources | **4 vCPU** is a solid default for sprint smoke (minimum **4+**); **8+ GB RAM**, **40+ GB** disk (tune to your host) |
-| Network | Bridged or NAT with outbound access for `apt`, `npm`, and `dotnet` installs |
+**Snap note:** Snap-packaged Chromium can behave differently (sandbox, paths). If launch fails, prefer a **deb** Chromium/Chrome or set **`ExecutablePath`** to the binary you verified in a terminal.
 
-Exact ISO download and hypervisor steps are intentionally left to your team standard (VirtualBox, VMware, Hyper-V, etc.).
-
-## Prerequisites (same stack as Windows)
-
-Install on the Ubuntu guest:
-
-- **Git**
-- **Node.js LTS** and **npm** (use [NodeSource](https://github.com/nodesource/distributions) or your approved method)
-- **.NET SDK** matching `api/*.csproj` (see [Download .NET](https://dotnet.microsoft.com/download))
-
-Optional for future streaming/playback tests:
-
-- Google Chrome (or Chromium), **MPV**, **ffmpeg/ffprobe** — not required for the current API + Vite smoke test.
+**Optional (future playback / parity with plan):** **MPV**, **ffmpeg/ffprobe** — not required for the current API + Vite smoke test.
 
 ## Clone and install
 
-From a directory you own (e.g. `~/src`):
+Use a directory on a **Linux native filesystem** (e.g. `~/src`), not a VirtualBox shared folder from Windows (avoids **`node_modules`** symlink and permission issues).
 
 ```bash
 git clone <your-repo-url> orange-tv
@@ -70,52 +55,86 @@ npm run setup
 
 ## Run (development)
 
+From the **repository root**:
+
 ```bash
 npm run dev
 ```
 
-Expected:
+This starts:
 
-- Vite: **`http://localhost:5173/`** (or the host shown in the terminal)
-- API: **`http://localhost:5144/`** by default (see `api/Properties/launchSettings.json`)
-- Chromium/Chrome app window opens automatically once the launcher URL is reachable
+- **Vite** on **`127.0.0.1:5173`** (`launcher/vite.config.ts`). Open **`http://localhost:5173/`** or **`http://127.0.0.1:5173/`** in a browser on the same machine.
+- **API** on **`http://localhost:5144/`** by default (`api/Properties/launchSettings.json`).
+- **BrowserShell**: opens Chromium/Chrome in app mode when the launcher URL is ready (unless **`ORANGETV_API__BrowserShell__Enabled=false`** in `.env`).
 
-## Testing from inside the VM
+Stop with **Ctrl+C**.
 
-| Topic | What to do |
+### API and launcher separately (optional)
+
+Same as Windows: **`npm run dev:api`** in one terminal, **`npm --prefix launcher run dev`** in another.
+
+### Electron (optional)
+
+1. Set **`ORANGETV_API__BrowserShell__Enabled=false`** if you do not want the API-driven Chromium window.
+2. **`npm run dev:api`** (or full **`npm run dev`** if you accept two shells).
+3. **`npm run dev:electron`** from the repo root.
+
+You should see **`[vite]`** and **`[electron]`** in the log. **Electron on Linux** needs the same graphical session as BrowserShell.
+
+**Production-style load (built assets):**
+
+```bash
+npm --prefix launcher run build
+cd launcher && npm run electron:prod
+```
+
+## Environment and data paths (Ubuntu)
+
+- Copy **`.env.example`** to **`.env`** for overrides; see [`environment.md`](environment.md).
+- **SQLite** example for Linux is already in `.env.example` (`/var/lib/orange-tv/...`); create the directory and permissions to match how you run the API.
+- **BrowserShell profile and launch state** default under the .NET user data root (typically **`~/.local/share/OrangeTv/`** on Linux when `SpecialFolder.LocalApplicationData` maps to XDG). Useful if you need to clear a stuck shell state.
+
+## Testing from the Ubuntu machine
+
+| Check | Command or action |
 | --- | --- |
-| **Network mode** | **NAT** (VirtualBox default) is enough for `apt` / `npm` / `dotnet`. |
-| **URLs** | **`http://localhost:5173/`** and **`http://localhost:5144/`** from Firefox/Chromium and `curl` **in the guest** after **`npm run dev`** there. |
-| **Guest Additions** | Optional: better resolution and shared clipboard with the host. |
+| API | `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/weatherforecast` → **200** |
+| Platform | `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/api/v1/system/platform` → **200** (expect **`isLinux":true`** on Ubuntu) |
+| Launcher | Open **`http://localhost:5173/`** in Firefox/Chromium after **`npm run dev`** |
 
-Clone the repo **inside** the guest home (e.g. `~/src/orange-tv`), not on a Windows shared folder, to avoid **`node_modules`** issues.
+Install **`curl`** if needed: `sudo apt install -y curl`.
+
+## VM-specific notes
+
+| Topic | Suggestion |
+| --- | --- |
+| **Resources** | **4 vCPU**, **8+ GB RAM**, **40+ GB** disk (tune to host) |
+| **Network** | NAT is enough for `apt` / `npm` / `dotnet` |
+| **Guest Additions** | Optional: resolution, shared clipboard |
+| **Repo location** | Clone **inside** the guest home, not on a Windows-mounted share |
 
 ## Smoke test checklist (Ubuntu)
 
-Mirror [`local-setup-windows.md`](local-setup-windows.md) with Linux equivalents:
-
 - [ ] `npm run setup` completes without errors
-- [ ] `npm run dev` starts both processes; no immediate crash
-- [ ] Chromium/Chrome opens automatically and the Vite app renders
-- [ ] `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/weatherforecast` prints **`200`**
-- [ ] Optional: `curl -s -o /dev/null -w "%{http_code}" http://localhost:5144/api/v1/system/platform` prints **`200`** (response should show `isLinux: true` on Ubuntu)
+- [ ] `npm run dev` starts Vite and API; no immediate crash
+- [ ] Chromium/Chrome opens **or** you disabled BrowserShell and opened the URL manually
+- [ ] `curl` checks above return **200**
+- [ ] Optional: **`npm run dev:electron`** works with BrowserShell disabled
 
-If `curl` is not installed: `sudo apt update && sudo apt install -y curl`.
+## Troubleshooting (Ubuntu)
 
-## Linux-specific work (future)
-
-The following belong here or under `scripts/linux/` as the product matures; they are **not** required for the scaffold:
-
-- **Display stack:** Wayland + `labwc` session (see `docs/project-plan-v1.2.md`)
-- **Packages:** `chromium-browser` or Chrome, `mpv`, `ffmpeg`
-- **Appliance:** auto-login, kiosk, watchdog — tracked in the architecture plan, not in this repo skeleton yet
+| Symptom | Likely cause | What to do |
+| --- | --- | --- |
+| Log: **Unable to auto-launch Chromium shell** | No browser on PATH or Snap/path quirks | Install **chromium** or **Chrome**; set **`ORANGETV_API__BrowserShell__ExecutablePath`** |
+| **Electron** never appears | **`wait-on`** stuck (use current `launcher/`), or no display | Use current repo; ensure a desktop session; see [`local-setup-windows.md`](local-setup-windows.md) troubleshooting for **`[electron]`** |
+| **Only** API Chromium window when you wanted Electron | BrowserShell still enabled | **`ORANGETV_API__BrowserShell__Enabled=false`** |
+| **EACCES** / sqlite path errors | Data dir missing or wrong user | Fix **`ORANGETV_API__Data__SqlitePath`** and directory permissions |
 
 ## Known gaps
 
 | Gap | Note |
 | --- | --- |
-| No appliance image yet | This doc covers **developer VM** validation only |
-| Path and shell differences | Use forward slashes in env examples where possible; see `docs/environment.md` |
-| Parity with Windows | Behavior should match; file **line endings** are normalized by `.editorconfig` (LF) |
+| **No appliance image yet** | This doc is **developer** Ubuntu; kiosk auto-login, **labwc**, watchdog — see `docs/project-plan-v1.2.md` |
+| **Parity with Windows** | Same commands; paths and browser packages differ — use **`.env`** and [`environment.md`](environment.md) |
 
-When this checklist is stable, consider promoting sections into `scripts/linux/` helpers referenced from `scripts/README.md`.
+When this checklist is stable, consider promoting sections into `scripts/linux/` helpers referenced from [`scripts/README.md`](scripts/README.md).

@@ -34,12 +34,23 @@ Examples:
 - `ORANGETV_API__BrowserShell__Enabled=false`
 - `ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium-browser`
 
+### BrowserShell and Electron
+
+When you run **`npm run dev:electron`**, you usually want **one** shell window. Set **`ORANGETV_API__BrowserShell__Enabled=false`** in `.env` while the API is up so it does not auto-open Chrome in addition to Electron. Default **`npm run dev`** keeps BrowserShell **enabled** so a Chromium window opens after Vite is ready.
+
+When starting **Electron** from a shell, you can override the dev URL with **`VITE_DEV_SERVER_URL`** (read by **`launcher/electron/main.cjs`** from the process environment — it is **not** supplied via Vite’s `import.meta.env`).
+
 ## Paths (Windows + Linux)
 
 When documenting paths:
 
 - Prefer **forward slashes** in docs and examples (`C:/Users/...`) since they also work well with many cross-platform tools.
 - For Linux appliance targets, keep persistent data in a documented app directory (e.g. `/var/lib/orange-tv/`).
+
+### Ubuntu (and most desktop Linux)
+
+- **BrowserShell executable:** set **`ORANGETV_API__BrowserShell__ExecutablePath`** if Chromium/Chrome is not discovered automatically (e.g. `/usr/bin/chromium`, `/usr/bin/google-chrome-stable`). See [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
+- **Dev profile / shell state:** the API stores BrowserShell data under the .NET local application data folder, which on Linux usually follows **XDG** (often **`~/.local/share/OrangeTv/`**). Use this when clearing a stuck dev profile.
 
 ## Source of truth
 
