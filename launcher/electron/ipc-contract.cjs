@@ -5,6 +5,8 @@
 const CHANNELS = {
   PING: "orange-tv:ping",
   LAUNCH_REQUEST: "orange-tv:launch-request",
+  /** Main -> renderer push (not ipcMain.handle). */
+  SHELL_FOREGROUND: "orange-tv:shell-foreground",
 };
 
 module.exports = { CHANNELS };

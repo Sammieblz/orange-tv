@@ -65,6 +65,17 @@ function createWindow() {
 
   shellLogger.attachWindowDiagnostics(win);
 
+  let shellHadBlur = false;
+  win.on("blur", () => {
+    shellHadBlur = true;
+  });
+  win.on("focus", () => {
+    if (shellHadBlur && !win.isDestroyed()) {
+      win.webContents.send(CHANNELS.SHELL_FOREGROUND);
+    }
+    shellHadBlur = false;
+  });
+
   win.once("ready-to-show", () => {
     win.show();
     if (shellProfile.shouldOpenDevtools()) {

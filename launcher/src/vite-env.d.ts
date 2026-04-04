@@ -1,13 +1,5 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  readonly VITE_ORANGETV_API_BASE_URL?: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
 /** Minimal shell metadata when `ORANGETV_ELECTRON__SHELL_PROFILE=appliance`. */
 interface OrangeTvRuntimeMetadataAppliance {
   shellProfile: "appliance";
@@ -27,10 +19,21 @@ interface OrangeTvPreload {
   ping: () => Promise<string>;
   launchRequest: (payload: unknown) => Promise<{ ok: boolean; reason?: string }>;
   getRuntimeMetadata: () => Promise<OrangeTvRuntimeMetadataAppliance | OrangeTvRuntimeMetadataFull>;
+  onShellForeground: (callback: () => void) => () => void;
 }
 
 declare global {
+  interface ImportMetaEnv {
+    readonly VITE_ORANGETV_API_BASE_URL?: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+
   interface Window {
     orangeTv?: OrangeTvPreload;
   }
 }
+
+export {};
