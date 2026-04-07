@@ -20,6 +20,7 @@ interface OrangeTvPreload {
   launchRequest: (payload: unknown) => Promise<{ ok: boolean; reason?: string }>;
   getRuntimeMetadata: () => Promise<OrangeTvRuntimeMetadataAppliance | OrangeTvRuntimeMetadataFull>;
   onShellForeground: (callback: () => void) => () => void;
+  setFullscreen: (fullscreen: boolean) => Promise<{ ok: boolean; reason?: string }>;
 }
 
 declare global {

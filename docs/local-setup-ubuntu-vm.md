@@ -96,7 +96,7 @@ export ORANGETV_ELECTRON__SHELL_PROFILE=appliance
 npm run dev:electron
 ```
 
-Details: [`environment.md`](environment.md), [`electron-shell.md`](electron-shell.md).
+Details: [`environment.md`](environment.md), [`electron-shell.md`](electron-shell.md), [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
 
 ## Environment and data paths (Ubuntu)
 

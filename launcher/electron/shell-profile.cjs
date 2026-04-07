@@ -29,6 +29,21 @@ function shouldOpenDevtools() {
 }
 
 /**
+ * Summarizes window/runtime mode for logging and tests (single source with getWindowChromeOptions).
+ * @returns {{ profile: string; kiosk: boolean; loadDevUrl: boolean; fullscreen: boolean }}
+ */
+function getShellWindowMode() {
+  const appliance = isApplianceProfile();
+  const kiosk = isKioskFlag();
+  return {
+    profile: appliance ? "appliance" : process.env.ORANGETV_ELECTRON__SHELL_PROFILE || "default",
+    kiosk,
+    loadDevUrl: isDevElectron(),
+    fullscreen: appliance || kiosk,
+  };
+}
+
+/**
  * @param {{ width: number; height: number; x: number; y: number }} workArea
  */
 function getWindowChromeOptions(workArea) {
@@ -91,6 +106,7 @@ module.exports = {
   isApplianceProfile,
   isKioskFlag,
   shouldOpenDevtools,
+  getShellWindowMode,
   getWindowChromeOptions,
   getRuntimeMetadataPayload,
 };

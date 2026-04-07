@@ -91,7 +91,7 @@ $env:ORANGETV_ELECTRON__SHELL_PROFILE = "appliance"
 # $env:ORANGETV_ELECTRON__KIOSK = "1"
 ```
 
-See [`environment.md`](environment.md) and [`electron-shell.md`](electron-shell.md).
+See [`environment.md`](environment.md), [`electron-shell.md`](electron-shell.md), and [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
 
 **Linux validation** is a separate step: clone the repo **inside** your Ubuntu VM, `git pull`, and run **`npm run dev`** there — see [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
 

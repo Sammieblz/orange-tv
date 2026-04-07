@@ -7,6 +7,8 @@ const CHANNELS = {
   LAUNCH_REQUEST: "orange-tv:launch-request",
   /** Main -> renderer push (not ipcMain.handle). */
   SHELL_FOREGROUND: "orange-tv:shell-foreground",
+  /** Renderer -> main: window chrome only ({ fullscreen: boolean }). */
+  WINDOW_SET_FULLSCREEN: "orange-tv:window-set-fullscreen",
 };
 
 module.exports = { CHANNELS };

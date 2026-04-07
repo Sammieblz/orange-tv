@@ -16,8 +16,13 @@ The TV launcher can run inside **Electron** (`launcher/electron/`). The **main**
 | **`launchRequest(payload)`** | `orange-tv:launch-request` | Validates `payload` in main (`kind` string, optional `id` string). Currently returns **`not-implemented`** after logging; reserved for forwarding to the .NET service. |
 | **`getRuntimeMetadata()`** | _(sync in preload)_ | **Appliance** profile: minimal object (`shellProfile`, `channel`). **Dev** / default: includes engine versions; **non-dev** production omits raw **Node** version. |
 | **`onShellForeground(cb)`** | `orange-tv:shell-foreground` (main **sends** after window was blurred then focused again) | Subscribe for focus-recovery when returning from an external app; returns unsubscribe. |
+| **`setFullscreen(fullscreen)`** | `orange-tv:window-set-fullscreen` | **Main window only:** sets fullscreen on the shell `BrowserWindow` (window chrome only). |
 
 Invoke-style channels are registered in main; **`SHELL_FOREGROUND`** is **push-only** from main to renderer. All names live in [`launcher/electron/ipc-contract.cjs`](../launcher/electron/ipc-contract.cjs).
+
+## Window lifecycle
+
+See **[electron-window-lifecycle.md](electron-window-lifecycle.md)** for the sequence of **app ready → window creation → load → show → focus/blur**, dev vs appliance/kiosk modes, and **F11** / **IPC fullscreen** toggles.
 
 ## Logging and failures
 

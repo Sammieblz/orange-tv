@@ -47,6 +47,7 @@ docs: expand Ubuntu VM setup stub
 
 - **API (xUnit):** `dotnet test` from the repo root (or `dotnet test orange-tv.sln`). Covers `OrangeTv.Api` plus shell/path helpers and HTTP integration tests.
 - **Launcher (Vitest):** `npm --prefix launcher test`.
+- **Electron main (Node test):** `npm --prefix launcher run test:electron` (shell-profile env matrix).
 - **Both:** `npm run test:all` runs launcher tests then `dotnet test`.
 
 ## Code style

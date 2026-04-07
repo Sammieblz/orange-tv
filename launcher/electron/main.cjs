@@ -1,30 +1,21 @@
-const { app, BrowserWindow, ipcMain, screen, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, screen, dialog, globalShortcut } = require("electron");
 const path = require("path");
 const shellLogger = require("./shell-logger.cjs");
 const { CHANNELS } = require("./ipc-contract.cjs");
 const shellProfile = require("./shell-profile.cjs");
+const { createMainWindow } = require("./window-lifecycle.cjs");
+const {
+  validateLaunchPayload,
+  validateWindowFullscreenPayload,
+} = require("./ipc-payload.cjs");
 
 shellLogger.installMainProcessHandlers();
 
 const isDev = shellProfile.isDevElectron();
 
-/**
- * @param {unknown} payload
- */
-function validateLaunchPayload(payload) {
-  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
-    return { valid: false, reason: "invalid-payload" };
-  }
-  const kind = /** @type {{ kind?: unknown; id?: unknown }} */ (payload).kind;
-  if (typeof kind !== "string" || kind.length === 0 || kind.length > 64) {
-    return { valid: false, reason: "invalid-kind" };
-  }
-  const id = /** @type {{ kind?: unknown; id?: unknown }} */ (payload).id;
-  if (id !== undefined && (typeof id !== "string" || id.length > 256)) {
-    return { valid: false, reason: "invalid-id" };
-  }
-  return { valid: true, kind, id };
-}
+/** @type {import("electron").BrowserWindow | null} */
+let mainWindow = null;
+let disposeWindowExtras = () => {};
 
 function registerIpcHandlers() {
   ipcMain.handle(CHANNELS.PING, () => "pong");
@@ -38,69 +29,60 @@ function registerIpcHandlers() {
     shellLogger.info("launchRequest accepted (stub)", { kind: parsed.kind, id: parsed.id });
     return Promise.resolve({ ok: false, reason: "not-implemented" });
   });
+
+  ipcMain.handle(CHANNELS.WINDOW_SET_FULLSCREEN, (_event, payload) => {
+    if (mainWindow === null || mainWindow.isDestroyed()) {
+      return Promise.resolve({ ok: false, reason: "no-window" });
+    }
+    const parsed = validateWindowFullscreenPayload(payload);
+    if (!parsed.valid) {
+      return Promise.resolve({ ok: false, reason: parsed.reason });
+    }
+    mainWindow.setFullScreen(parsed.fullscreen);
+    shellLogger.info("window fullscreen (IPC)", { fullscreen: parsed.fullscreen });
+    return Promise.resolve({ ok: true });
+  });
 }
 
 registerIpcHandlers();
 
 function createWindow() {
+  disposeWindowExtras();
   const workArea = screen.getPrimaryDisplay().workArea;
-  const chromeOpts = shellProfile.getWindowChromeOptions({
-    width: workArea.width,
-    height: workArea.height,
-    x: workArea.x,
-    y: workArea.y,
+  const preloadPath = path.join(__dirname, "preload.cjs");
+  const distIndexPath = path.join(__dirname, "..", "dist", "index.html");
+
+  const { win, dispose } = createMainWindow({
+    workArea,
+    shellProfile,
+    shellLogger,
+    CHANNELS,
+    dialog,
+    isDev,
+    devUrl: process.env.VITE_DEV_SERVER_URL,
+    preloadPath,
+    distIndexPath,
   });
 
-  const win = new BrowserWindow({
-    ...chromeOpts,
-    backgroundColor: "#0a0a0a",
-    show: false,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.cjs"),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-    },
-  });
+  mainWindow = win;
+  disposeWindowExtras = dispose;
 
-  shellLogger.attachWindowDiagnostics(win);
-
-  let shellHadBlur = false;
-  win.on("blur", () => {
-    shellHadBlur = true;
-  });
-  win.on("focus", () => {
-    if (shellHadBlur && !win.isDestroyed()) {
-      win.webContents.send(CHANNELS.SHELL_FOREGROUND);
+  win.on("closed", () => {
+    if (mainWindow === win) {
+      mainWindow = null;
     }
-    shellHadBlur = false;
-  });
-
-  win.once("ready-to-show", () => {
-    win.show();
-    if (shellProfile.shouldOpenDevtools()) {
-      win.webContents.openDevTools({ mode: "detach" });
-    }
-  });
-
-  const loadPromise = isDev
-    ? win.loadURL(process.env.VITE_DEV_SERVER_URL || "http://localhost:5173")
-    : win.loadFile(path.join(__dirname, "..", "dist", "index.html"));
-
-  void loadPromise.catch((err) => {
-    shellLogger.error("failed to load shell content", {
-      message: err?.message,
-      stack: err?.stack,
-    });
-    dialog.showErrorBox(
-      "Orange TV",
-      `The launcher could not load.\n\n${err?.message || String(err)}`,
-    );
+    disposeWindowExtras();
+    disposeWindowExtras = () => {};
   });
 }
 
 app.whenReady().then(() => {
-  shellLogger.info("app ready", { isDev, profile: process.env.ORANGETV_ELECTRON__SHELL_PROFILE });
+  const mode = shellProfile.getShellWindowMode();
+  shellLogger.info("app ready", {
+    isDev,
+    windowMode: mode,
+    profile: process.env.ORANGETV_ELECTRON__SHELL_PROFILE,
+  });
   createWindow();
 });
 
@@ -114,4 +96,8 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
