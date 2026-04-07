@@ -67,6 +67,16 @@ When documenting paths:
 - **BrowserShell executable:** set **`ORANGETV_API__BrowserShell__ExecutablePath`** if Chromium/Chrome is not discovered automatically (e.g. `/usr/bin/chromium`, `/usr/bin/google-chrome-stable`). See [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
 - **Dev profile / shell state:** the API stores BrowserShell data under the .NET local application data folder, which on Linux usually follows **XDG** (often **`~/.local/share/OrangeTv/`**). Use this when clearing a stuck dev profile.
 
+## Local API (control plane)
+
+With the API running (default `http://localhost:5144`), baseline endpoints include:
+
+- `GET /api/v1/health` — SQLite connectivity and service status.
+- `GET` / `PUT /api/v1/settings` — persisted key/value settings (`PUT /api/v1/settings/{key}` with JSON `{ "value": "..." }`).
+- `GET /api/v1/apps` — launcher catalog rows (seeded when the database is empty).
+
+The SQLite file defaults to `%LOCALAPPDATA%\OrangeTv\orange-tv.db` on Windows when `ORANGETV_API__Data__SqlitePath` is unset (see `.env.example`).
+
 ## Source of truth
 
 - See `.env.example` for current variable examples.

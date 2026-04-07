@@ -8,7 +8,7 @@
     "dev:launcher": "npm --prefix launcher run dev",
     "dev:electron": "npm --prefix launcher run dev:electron",
     "dev:api": "dotnet watch --project api/OrangeTv.Api.csproj run",
-    "setup": "npm install && npm --prefix launcher install && dotnet restore api/OrangeTv.Api.csproj",
+    "setup": "npm install && npm --prefix launcher install && dotnet restore api/OrangeTv.Api.csproj && dotnet tool restore",
     "build": "npm --prefix launcher run build && dotnet build api/OrangeTv.Api.csproj",
     "test": "dotnet test",
     "test:all": "npm --prefix launcher test && dotnet test",

@@ -13,6 +13,8 @@ dist/
 **/bin/
 **/obj/
 **/artifacts/
+orange-tv-ef-design.db
+api/orange-tv-ef-design.db
 
 # User-specific files
 *.user

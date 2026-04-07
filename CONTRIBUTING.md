@@ -43,6 +43,17 @@ docs: expand Ubuntu VM setup stub
 
 **Body:** optional; use for context, breaking changes, or follow-ups.
 
+## .NET EF migrations
+
+- Restore the local tool manifest once per clone: **`dotnet tool restore`** (also runs from **`npm run setup`** at the repo root).
+- Add a migration after model changes (from the repo root):
+
+  ```bash
+  dotnet tool run dotnet-ef migrations add <Name> --project api/OrangeTv.Api.csproj --output-dir Data/Migrations
+  ```
+
+- The API applies migrations on startup (`Database.Migrate()`).
+
 ## Tests
 
 - **API (xUnit):** `dotnet test` from the repo root (or `dotnet test orange-tv.sln`). Covers `OrangeTv.Api` plus shell/path helpers and HTTP integration tests.
