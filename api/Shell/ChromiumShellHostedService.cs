@@ -8,8 +8,6 @@ namespace OrangeTv.Api.Shell;
 
 public sealed class ChromiumShellHostedService : BackgroundService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     private readonly BrowserShellOptions options;
     private readonly IHostApplicationLifetime applicationLifetime;
     private readonly IHostEnvironment hostEnvironment;
@@ -54,7 +52,7 @@ public sealed class ChromiumShellHostedService : BackgroundService
 
             await WaitForApplicationStartedAsync(stoppingToken);
 
-            var launchStatePath = GetLaunchStatePath();
+            var launchStatePath = BrowserShellPaths.GetLaunchStatePath(BrowserShellPaths.ResolveOrangeTvDataRoot());
 
             if (TryGetRunningShellProcess(launchStatePath, out var existingProcess))
             {
@@ -128,7 +126,7 @@ public sealed class ChromiumShellHostedService : BackgroundService
 
     private Uri? GetLauncherUri()
     {
-        if (Uri.TryCreate(options.LauncherUrl, UriKind.Absolute, out var launcherUri))
+        if (BrowserShellLauncherUri.TryCreateAbsolute(options.LauncherUrl, out var launcherUri))
         {
             return launcherUri;
         }
@@ -175,14 +173,16 @@ public sealed class ChromiumShellHostedService : BackgroundService
     private BrowserLaunchAttempt TryLaunchShell(Uri launcherUri)
     {
         var attemptedExecutables = new List<string>();
+        var orangeTvRoot = BrowserShellPaths.ResolveOrangeTvDataRoot();
+        var userDataDir = BrowserShellPaths.GetUserDataDirectory(options, orangeTvRoot);
 
-        foreach (var candidate in GetExecutableCandidates())
+        foreach (var candidate in BrowserShellExecutableCandidates.Enumerate(options, platformEnvironment))
         {
             attemptedExecutables.Add(candidate);
 
             try
             {
-                var process = Process.Start(BuildStartInfo(candidate, launcherUri));
+                var process = Process.Start(BuildStartInfo(candidate, launcherUri, userDataDir));
                 if (process is not null)
                 {
                     return new BrowserLaunchAttempt(true, process, candidate, attemptedExecutables);
@@ -201,7 +201,7 @@ public sealed class ChromiumShellHostedService : BackgroundService
         return new BrowserLaunchAttempt(false, null, null, attemptedExecutables);
     }
 
-    private ProcessStartInfo BuildStartInfo(string executable, Uri launcherUri)
+    private ProcessStartInfo BuildStartInfo(string executable, Uri launcherUri, string userDataDirectory)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -211,114 +211,12 @@ public sealed class ChromiumShellHostedService : BackgroundService
             RedirectStandardError = true,
         };
 
-        foreach (var argument in BuildBrowserArguments(launcherUri))
+        foreach (var argument in BrowserShellChromeArguments.BuildArguments(launcherUri, options, userDataDirectory))
         {
             startInfo.ArgumentList.Add(argument);
         }
 
         return startInfo;
-    }
-
-    private IEnumerable<string> BuildBrowserArguments(Uri launcherUri)
-    {
-        yield return "--no-first-run";
-        yield return "--no-default-browser-check";
-        yield return "--disable-session-crashed-bubble";
-        yield return $"--user-data-dir={GetUserDataDirectory()}";
-
-        if (options.StartFullscreen)
-        {
-            yield return "--start-fullscreen";
-        }
-
-        if (options.UseAppMode)
-        {
-            yield return $"--app={launcherUri}";
-            yield break;
-        }
-
-        yield return "--new-window";
-        yield return launcherUri.ToString();
-    }
-
-    private IEnumerable<string> GetExecutableCandidates()
-    {
-        if (!string.IsNullOrWhiteSpace(options.ExecutablePath))
-        {
-            yield return options.ExecutablePath.Trim();
-        }
-
-        if (platformEnvironment.IsLinux)
-        {
-            yield return "chromium-browser";
-            yield return "chromium";
-            yield return "google-chrome";
-            yield return "google-chrome-stable";
-            yield break;
-        }
-
-        if (platformEnvironment.IsWindows)
-        {
-            foreach (var path in GetWindowsExecutableCandidates())
-            {
-                yield return path;
-            }
-
-            yield break;
-        }
-
-        yield return "chromium-browser";
-        yield return "chromium";
-        yield return "google-chrome";
-    }
-
-    private IEnumerable<string> GetWindowsExecutableCandidates()
-    {
-        yield return "chrome.exe";
-
-        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        if (!string.IsNullOrWhiteSpace(programFiles))
-        {
-            yield return Path.Combine(programFiles, "Google", "Chrome", "Application", "chrome.exe");
-        }
-
-        var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-        if (!string.IsNullOrWhiteSpace(programFilesX86))
-        {
-            yield return Path.Combine(programFilesX86, "Google", "Chrome", "Application", "chrome.exe");
-        }
-
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (!string.IsNullOrWhiteSpace(localAppData))
-        {
-            yield return Path.Combine(localAppData, "Google", "Chrome", "Application", "chrome.exe");
-        }
-    }
-
-    private string GetUserDataDirectory()
-    {
-        if (!string.IsNullOrWhiteSpace(options.UserDataDir))
-        {
-            return Path.GetFullPath(options.UserDataDir.Trim());
-        }
-
-        return Path.Combine(GetOrangeTvDataRoot(), "browser-shell", "profile");
-    }
-
-    private string GetLaunchStatePath()
-    {
-        return Path.Combine(GetOrangeTvDataRoot(), "browser-shell", "launch-state.json");
-    }
-
-    private string GetOrangeTvDataRoot()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        if (string.IsNullOrWhiteSpace(localAppData))
-        {
-            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        }
-
-        return Path.Combine(localAppData, "OrangeTv");
     }
 
     private bool TryGetRunningShellProcess(string launchStatePath, out Process? process)
@@ -332,7 +230,9 @@ public sealed class ChromiumShellHostedService : BackgroundService
 
         try
         {
-            var launchState = JsonSerializer.Deserialize<BrowserLaunchState>(File.ReadAllText(launchStatePath), JsonOptions);
+            var launchState = JsonSerializer.Deserialize<BrowserLaunchState>(
+                File.ReadAllText(launchStatePath),
+                BrowserShellJson.WebOptions);
             if (launchState is null)
             {
                 File.Delete(launchStatePath);
@@ -376,7 +276,9 @@ public sealed class ChromiumShellHostedService : BackgroundService
             launchedProcess.StartTime.ToUniversalTime());
 
         Directory.CreateDirectory(Path.GetDirectoryName(launchStatePath)!);
-        File.WriteAllText(launchStatePath, JsonSerializer.Serialize(launchState, JsonOptions));
+        File.WriteAllText(
+            launchStatePath,
+            JsonSerializer.Serialize(launchState, BrowserShellJson.WebOptions));
     }
 
     private static void BeginDiscardingBrowserOutput(Process launchedProcess)
@@ -429,6 +331,4 @@ public sealed class ChromiumShellHostedService : BackgroundService
         Process? Process,
         string? ExecutableUsed,
         IReadOnlyList<string> AttemptedExecutables);
-
-    private sealed record BrowserLaunchState(int ProcessId, DateTime StartedAtUtc);
 }

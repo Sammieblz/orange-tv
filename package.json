@@ -11,6 +11,8 @@
     "setup": "npm install && npm --prefix launcher install && dotnet restore api/OrangeTv.Api.csproj",
     "build": "npm --prefix launcher run build && dotnet build api/OrangeTv.Api.csproj",
     "test": "dotnet test",
+    "test:all": "npm --prefix launcher test && dotnet test",
+    "test:launcher": "npm --prefix launcher test",
     "format": "npm --prefix launcher run format --if-present",
     "format:dotnet": "dotnet format api/OrangeTv.Api.csproj",
     "design-system": "node scripts/generate-design-system.mjs"
