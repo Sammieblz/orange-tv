@@ -4,7 +4,7 @@
 const assert = require("node:assert");
 const { describe, it } = require("node:test");
 
-const { CHANNELS } = require("./ipc-contract.cjs");
+const { CHANNELS, RENDERER_INVOKE_CHANNELS } = require("./ipc-contract.cjs");
 
 describe("CHANNELS", () => {
   it("defines stable orange-tv prefixed names", () => {
@@ -17,5 +17,15 @@ describe("CHANNELS", () => {
   it("uses unique values", () => {
     const values = Object.values(CHANNELS);
     assert.strictEqual(new Set(values).size, values.length);
+  });
+});
+
+describe("RENDERER_INVOKE_CHANNELS", () => {
+  it("lists invoke-only channels used by the preload bridge", () => {
+    assert.deepStrictEqual(RENDERER_INVOKE_CHANNELS, [
+      CHANNELS.PING,
+      CHANNELS.LAUNCH_REQUEST,
+      CHANNELS.WINDOW_SET_FULLSCREEN,
+    ]);
   });
 });

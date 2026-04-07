@@ -10,6 +10,7 @@ const {
 } = require("./ipc-payload.cjs");
 
 shellLogger.installMainProcessHandlers();
+shellLogger.installAppDiagnostics(app);
 
 const isDev = shellProfile.isDevElectron();
 
@@ -23,23 +24,48 @@ function registerIpcHandlers() {
   ipcMain.handle(CHANNELS.LAUNCH_REQUEST, (_event, payload) => {
     const parsed = validateLaunchPayload(payload);
     if (!parsed.valid) {
-      shellLogger.warn("launchRequest rejected", { reason: parsed.reason, payload });
+      shellLogger.warn("launch_outcome", {
+        event: "launch_outcome",
+        ok: false,
+        reason: parsed.reason,
+      });
       return Promise.resolve({ ok: false, reason: parsed.reason });
     }
-    shellLogger.info("launchRequest accepted (stub)", { kind: parsed.kind, id: parsed.id });
-    return Promise.resolve({ ok: false, reason: "not-implemented" });
+    const result = { ok: false, reason: "not-implemented" };
+    shellLogger.warn("launch_outcome", {
+      event: "launch_outcome",
+      ok: result.ok,
+      reason: result.reason,
+      kind: parsed.kind,
+      id: parsed.id,
+    });
+    return Promise.resolve(result);
   });
 
   ipcMain.handle(CHANNELS.WINDOW_SET_FULLSCREEN, (_event, payload) => {
     if (mainWindow === null || mainWindow.isDestroyed()) {
+      shellLogger.warn("window_set_fullscreen", {
+        event: "window_set_fullscreen",
+        ok: false,
+        reason: "no-window",
+      });
       return Promise.resolve({ ok: false, reason: "no-window" });
     }
     const parsed = validateWindowFullscreenPayload(payload);
     if (!parsed.valid) {
+      shellLogger.warn("window_set_fullscreen", {
+        event: "window_set_fullscreen",
+        ok: false,
+        reason: parsed.reason,
+      });
       return Promise.resolve({ ok: false, reason: parsed.reason });
     }
     mainWindow.setFullScreen(parsed.fullscreen);
-    shellLogger.info("window fullscreen (IPC)", { fullscreen: parsed.fullscreen });
+    shellLogger.info("window_set_fullscreen", {
+      event: "window_set_fullscreen",
+      ok: true,
+      fullscreen: parsed.fullscreen,
+    });
     return Promise.resolve({ ok: true });
   });
 }
