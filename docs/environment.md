@@ -51,6 +51,8 @@ These are read by **`launcher/electron/main.cjs`** and **`launcher/electron/prel
 | **`ORANGETV_ELECTRON__KIOSK`** | **`1`** / **`true`**: enable Electron **`kiosk`** (stricter than fullscreen alone). |
 | **`ORANGETV_ELECTRON__OPEN_DEVTOOLS`** | **`1`** / **`true`**: open DevTools when **`ELECTRON_IS_DEV`** is set and profile is **not** appliance. |
 
+**Fullscreen toggles (not env vars):** In dev (non-appliance), the main process registers **F11** to toggle fullscreen. The preload API **`window.orangeTv.setFullscreen(boolean)`** invokes **`orange-tv:window-set-fullscreen`**. See [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
+
 **Shell logs:** main-process diagnostics use the prefix **`[OrangeTv:shell]`** on **stderr** (load failures, render-process-gone, unhandled errors). See [`electron-shell.md`](electron-shell.md).
 
 ## Paths (Windows + Linux)

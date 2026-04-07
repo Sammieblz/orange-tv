@@ -45,6 +45,7 @@ describe("useShellFocusRecovery", () => {
         shellProfile: "appliance",
         channel: "test",
       }),
+      setFullscreen: async () => ({ ok: true }),
       onShellForeground: (cb: () => void) => {
         cb();
         return unsub;
@@ -97,6 +98,7 @@ describe("useShellFocusRecovery", () => {
         shellProfile: "appliance",
         channel: "test",
       }),
+      setFullscreen: async () => ({ ok: true }),
       onShellForeground: () => unsub,
     };
 

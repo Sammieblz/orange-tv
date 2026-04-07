@@ -24,4 +24,7 @@ contextBridge.exposeInMainWorld("orangeTv", {
       ipcRenderer.removeListener(channel, listener);
     };
   },
+
+  /** Window chrome only: request fullscreen on the main BrowserWindow. */
+  setFullscreen: (fullscreen) => ipcRenderer.invoke(CHANNELS.WINDOW_SET_FULLSCREEN, { fullscreen }),
 });
