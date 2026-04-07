@@ -4,6 +4,7 @@ using OrangeTv.Api;
 using OrangeTv.Api.Configuration;
 using OrangeTv.Api.Data;
 using OrangeTv.Api.Endpoints;
+using OrangeTv.Api.Services;
 using OrangeTv.Api.Platform;
 using OrangeTv.Api.Shell;
 using Serilog;
@@ -43,6 +44,7 @@ builder.Services.AddDbContext<OrangeTvDbContext>(
 builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 builder.Services.Configure<BrowserShellOptions>(builder.Configuration.GetSection(BrowserShellOptions.SectionName));
 builder.Services.AddHostedService<ChromiumShellHostedService>();
+builder.Services.AddSingleton<ProcessLaunchService>();
 
 var app = builder.Build();
 

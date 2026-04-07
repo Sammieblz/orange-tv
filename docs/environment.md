@@ -50,6 +50,7 @@ These are read by **`launcher/electron/main.cjs`** and **`launcher/electron/prel
 | **`ORANGETV_ELECTRON__SHELL_PROFILE`** | **`appliance`**: fullscreen shell, minimal metadata exposed to renderer via preload. Omit / other: windowed (dev-sized) or centered window for production builds on desktop. |
 | **`ORANGETV_ELECTRON__KIOSK`** | **`1`** / **`true`**: enable Electron **`kiosk`** (stricter than fullscreen alone). |
 | **`ORANGETV_ELECTRON__OPEN_DEVTOOLS`** | **`1`** / **`true`**: open DevTools when **`ELECTRON_IS_DEV`** is set and profile is **not** appliance. |
+| **`ORANGETV_ELECTRON__API_BASE_URL`** | Base URL for the local .NET API (no trailing slash). Main uses this for **`POST /api/v1/launch`** when the renderer calls **`window.orangeTv.launchRequest`**. Defaults to **`http://localhost:5144`** when unset. |
 
 **Fullscreen toggles (not env vars):** In dev (non-appliance), the main process registers **F11** to toggle fullscreen. The preload API **`window.orangeTv.setFullscreen(boolean)`** invokes **`orange-tv:window-set-fullscreen`**. See [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
 
@@ -74,6 +75,9 @@ With the API running (default `http://localhost:5144`), baseline endpoints inclu
 - `GET /api/v1/health` — SQLite connectivity and service status.
 - `GET` / `PUT /api/v1/settings` — persisted key/value settings (`PUT /api/v1/settings/{key}` with JSON `{ "value": "..." }`).
 - `GET /api/v1/apps` — launcher catalog rows (seeded when the database is empty).
+- `POST /api/v1/launch` — JSON `{ "appId": "<id>" }` to spawn Chrome or MPV (see seeded apps in `api/Data/DbSeeder.cs`).
+
+**MPV sample file (dev):** when the seeded MPV app has no `LaunchUrl`, the API reads **`ORANGETV_API__Launch__SampleMediaPath`** (see `api/Configuration/OrangetvApiOptions.cs`). Point it at a real media file on your machine; leave unset in CI.
 
 The SQLite file defaults to `%LOCALAPPDATA%\OrangeTv\orange-tv.db` on Windows when `ORANGETV_API__Data__SqlitePath` is unset (see `.env.example`).
 

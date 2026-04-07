@@ -8,6 +8,7 @@ const {
   validateLaunchPayload,
   validateWindowFullscreenPayload,
 } = require("./ipc-payload.cjs");
+const { postLaunch } = require("./ipc-launch.cjs");
 
 shellLogger.installMainProcessHandlers();
 shellLogger.installAppDiagnostics(app);
@@ -21,7 +22,7 @@ let disposeWindowExtras = () => {};
 function registerIpcHandlers() {
   ipcMain.handle(CHANNELS.PING, () => "pong");
 
-  ipcMain.handle(CHANNELS.LAUNCH_REQUEST, (_event, payload) => {
+  ipcMain.handle(CHANNELS.LAUNCH_REQUEST, async (_event, payload) => {
     const parsed = validateLaunchPayload(payload);
     if (!parsed.valid) {
       shellLogger.warn("launch_outcome", {
@@ -29,17 +30,38 @@ function registerIpcHandlers() {
         ok: false,
         reason: parsed.reason,
       });
-      return Promise.resolve({ ok: false, reason: parsed.reason });
+      return { ok: false, reason: parsed.reason };
     }
-    const result = { ok: false, reason: "not-implemented" };
-    shellLogger.warn("launch_outcome", {
-      event: "launch_outcome",
-      ok: result.ok,
-      reason: result.reason,
-      kind: parsed.kind,
-      id: parsed.id,
-    });
-    return Promise.resolve(result);
+    try {
+      const result = await postLaunch(parsed.id);
+      if (result.ok) {
+        shellLogger.info("launch_outcome", {
+          event: "launch_outcome",
+          ok: true,
+          appId: parsed.id,
+          sessionId: result.sessionId,
+          pid: result.pid,
+        });
+      } else {
+        shellLogger.warn("launch_outcome", {
+          event: "launch_outcome",
+          ok: false,
+          reason: result.reason,
+          appId: parsed.id,
+        });
+      }
+      return result;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      shellLogger.warn("launch_outcome", {
+        event: "launch_outcome",
+        ok: false,
+        reason: "launch-handler-error",
+        appId: parsed.id,
+        message,
+      });
+      return { ok: false, reason: "launch-handler-error" };
+    }
   });
 
   ipcMain.handle(CHANNELS.WINDOW_SET_FULLSCREEN, (_event, payload) => {

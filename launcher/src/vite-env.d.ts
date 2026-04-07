@@ -17,7 +17,12 @@ interface OrangeTvRuntimeMetadataFull {
 /** Exposed from `electron/preload.cjs` when running under Electron. */
 interface OrangeTvPreload {
   ping: () => Promise<string>;
-  launchRequest: (payload: unknown) => Promise<{ ok: boolean; reason?: string }>;
+  launchRequest: (payload: { kind: "app"; id: string }) => Promise<{
+    ok: boolean;
+    reason?: string;
+    sessionId?: string;
+    pid?: number;
+  }>;
   getRuntimeMetadata: () => Promise<OrangeTvRuntimeMetadataAppliance | OrangeTvRuntimeMetadataFull>;
   onShellForeground: (callback: () => void) => () => void;
   setFullscreen: (fullscreen: boolean) => Promise<{ ok: boolean; reason?: string }>;

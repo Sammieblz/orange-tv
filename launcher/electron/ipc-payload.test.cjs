@@ -17,28 +17,21 @@ describe("validateLaunchPayload", () => {
     assert.strictEqual(validateLaunchPayload([]).valid, false);
   });
 
-  it("requires non-empty kind string <= 64 chars", () => {
+  it("requires kind app with non-empty id", () => {
     assert.strictEqual(validateLaunchPayload({}).valid, false);
     assert.strictEqual(validateLaunchPayload({ kind: "" }).valid, false);
-    assert.strictEqual(validateLaunchPayload({ kind: "a".repeat(65) }).valid, false);
-  });
-
-  it("accepts minimal valid payload", () => {
-    const r = validateLaunchPayload({ kind: "app" });
+    assert.strictEqual(validateLaunchPayload({ kind: "app" }).valid, false);
+    assert.strictEqual(validateLaunchPayload({ kind: "other", id: "x" }).valid, false);
+    const r = validateLaunchPayload({ kind: "app", id: "launch-streaming-demo" });
     assert.strictEqual(r.valid, true);
     if (r.valid) {
       assert.strictEqual(r.kind, "app");
-      assert.strictEqual(r.id, undefined);
+      assert.strictEqual(r.id, "launch-streaming-demo");
     }
   });
 
-  it("validates optional id length", () => {
-    assert.strictEqual(validateLaunchPayload({ kind: "x", id: "a".repeat(257) }).valid, false);
-    const r = validateLaunchPayload({ kind: "x", id: "tile-1" });
-    assert.strictEqual(r.valid, true);
-    if (r.valid) {
-      assert.strictEqual(r.id, "tile-1");
-    }
+  it("rejects id too long", () => {
+    assert.strictEqual(validateLaunchPayload({ kind: "app", id: "a".repeat(257) }).valid, false);
   });
 });
 

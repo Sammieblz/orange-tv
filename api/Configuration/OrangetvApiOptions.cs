@@ -8,6 +8,17 @@ public sealed class OrangetvApiOptions
     public const string SectionName = "ORANGETV_API";
 
     public DataOptions Data { get; set; } = new();
+
+    public LaunchOptions Launch { get; set; } = new();
+}
+
+public sealed class LaunchOptions
+{
+    /// <summary>
+    /// Optional media file path for seeded MPV demos when the app row has no <c>LaunchUrl</c>.
+    /// Set via <c>ORANGETV_API__Launch__SampleMediaPath</c>.
+    /// </summary>
+    public string? SampleMediaPath { get; set; }
 }
 
 public sealed class DataOptions

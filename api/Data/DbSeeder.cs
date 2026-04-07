@@ -19,18 +19,20 @@ public static class DbSeeder
         db.Apps.AddRange(
             new AppEntity
             {
-                Id = "streaming",
-                Label = "Streaming",
-                Type = "row",
+                Id = "launch-streaming-demo",
+                Label = "Open streaming (Chrome)",
+                Type = "chrome",
+                LaunchUrl = "https://example.com",
                 SortOrder = 0,
                 CreatedAtUtc = now,
                 UpdatedAtUtc = now,
             },
             new AppEntity
             {
-                Id = "local-media",
-                Label = "Local media",
-                Type = "row",
+                Id = "launch-mpv-demo",
+                Label = "Play sample (MPV)",
+                Type = "mpv",
+                LaunchUrl = "",
                 SortOrder = 1,
                 CreatedAtUtc = now,
                 UpdatedAtUtc = now,
