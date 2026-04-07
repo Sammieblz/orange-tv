@@ -1,14 +1,20 @@
 # Orange TV
 
-Orange TV is a TV-first launcher and local media platform designed for a living-room experience.
+**Orange TV** is a **Linux-based living-room appliance** that unifies **local media**, **browser-based streaming shortcuts** (persistent sign-in sessions), and **retro gaming** inside a fast, TV-first launcher. A **local host service** handles playback orchestration, personalization, diagnostics, and recovery — not a remote cloud backend.
 
-It combines an Electron shell, a React-based TV UI, and a local host service backed by SQLite to deliver a fast launcher experience for streaming shortcuts with persistent sessions, local media playback, and retro gaming — with an appliance-grade focus on recovery and return-to-home behavior.
+**Inspiration:** TV-first devices such as **Apple TV**, **Amazon Fire TV** / **Fire TV Stick**, and **Roku** — that instant-on, remote- or controller-friendly “home for everything” feeling — rebuilt as an **open, local-first** stack on a **Linux mini PC** you own, with local libraries and retro games alongside streaming shortcuts.
+
+**What it is:** a local control plane and shell that orchestrates trusted desktop software (browser, MPV, emulators) on the box, with polished **10-foot UI** ergonomics and a dependable **return-to-home** path after any external app exits or crashes.
+
+**What it is not:** a cloud media service, a credential vault, or a web-automation product. Streaming through Chrome is a **best-effort convenience** on Linux; **local media and launcher quality** are the premium pillars. See the strategic note in the plan below.
+
+At a glance: **Electron** shell (narrow preload IPC) + **React** TV UI + **ASP.NET Core Minimal API** on **.NET 10 LTS** with **SQLite**, **background workers**, and (on the target image) **Ubuntu 24.04 LTS** + **Wayland** + **labwc** for the appliance session.
 
 ## Full-scope plan (v1.2)
 
-The detailed architecture, OS/session baseline, operations plane, data model, and delivery sequencing live here:
+The canonical in-repo write-up (architecture, OS/session baseline, operations, data model, delivery sequencing, risks) is:
 
-- `docs/project-plan-v1.2.md`
+- [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md)
 
 ## Config, lint/format, and env conventions
 
@@ -22,7 +28,7 @@ The detailed architecture, OS/session baseline, operations plane, data model, an
 
 ## Vision
 
-Orange TV aims to feel like a dedicated home entertainment appliance rather than a traditional desktop app.
+Ship something that feels like a **dedicated home entertainment appliance**, not a traditional desktop app: boot into the shell, hide the desktop, and always offer a predictable route **home**. Favor **reliability** (watchdogs, logs, diagnostics, rollback, safe mode) alongside features; **privacy by design** (no stored account passwords, no reading browser cookie databases for “sign-in detection”).
 
 ## Core goals
 
@@ -110,7 +116,7 @@ Responsible for:
 
 ### Backend
 
-- .NET local API
+- ASP.NET Core Minimal API (.NET 10 LTS)
 - Entity Framework Core
 - SQLite
 - Background workers
