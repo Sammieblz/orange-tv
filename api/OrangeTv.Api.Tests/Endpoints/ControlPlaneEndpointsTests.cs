@@ -66,8 +66,42 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
         Assert.NotNull(payload);
         Assert.NotNull(payload.Items);
         Assert.Equal(2, payload.Items.Length);
-        Assert.Equal("streaming", payload.Items[0].Id);
-        Assert.Equal("local-media", payload.Items[1].Id);
+        Assert.Equal("launch-streaming-demo", payload.Items[0].Id);
+        Assert.Equal("launch-mpv-demo", payload.Items[1].Id);
+    }
+
+    [Fact]
+    public async Task PostLaunch_unknown_app_returns_404()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/launch",
+            new { appId = "does-not-exist" },
+            _jsonOptions,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var doc = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions, CancellationToken.None);
+        Assert.True(doc.TryGetProperty("ok", out var ok));
+        Assert.False(ok.GetBoolean());
+        Assert.True(doc.TryGetProperty("reason", out var reason));
+        Assert.Equal("app-not-found", reason.GetString());
+    }
+
+    [Fact]
+    public async Task PostLaunch_empty_app_id_returns_400()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/launch",
+            new { appId = "" },
+            _jsonOptions,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var doc = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions, CancellationToken.None);
+        Assert.True(doc.TryGetProperty("ok", out var ok));
+        Assert.False(ok.GetBoolean());
+        Assert.True(doc.TryGetProperty("reason", out var reason));
+        Assert.Equal("invalid-app-id", reason.GetString());
     }
 
     [Fact]

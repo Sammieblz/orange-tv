@@ -14,6 +14,8 @@ public sealed class OrangeTvDbContext : DbContext
 
     public DbSet<SettingEntity> Settings => Set<SettingEntity>();
 
+    public DbSet<LaunchSessionEntity> LaunchSessions => Set<LaunchSessionEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppEntity>(e =>
@@ -33,6 +35,19 @@ public sealed class OrangeTvDbContext : DbContext
             e.HasKey(x => x.Key);
             e.Property(x => x.Key).HasMaxLength(256);
             e.Property(x => x.Value).HasMaxLength(8192);
+        });
+
+        modelBuilder.Entity<LaunchSessionEntity>(e =>
+        {
+            e.ToTable("launch_sessions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.AppId).HasMaxLength(64).IsRequired();
+            e.Property(x => x.SpawnError).HasMaxLength(2048);
+            e.HasIndex(x => x.StartedAtUtc);
+            e.HasOne<AppEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.AppId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

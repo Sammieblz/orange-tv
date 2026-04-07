@@ -44,7 +44,7 @@ describe("createOrangeTvBridge", () => {
     const bridge = createOrangeTvBridge(ipcRenderer, shellProfile);
 
     await bridge.ping();
-    await bridge.launchRequest({ kind: "x" });
+    await bridge.launchRequest({ kind: "app", id: "launch-streaming-demo" });
     await bridge.setFullscreen(true);
 
     assert.deepStrictEqual(invoked, [

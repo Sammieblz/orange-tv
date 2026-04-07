@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrangeTv.Api.Data;
 using OrangeTv.Api.Data.Entities;
+using OrangeTv.Api.Services;
 
 namespace OrangeTv.Api.Endpoints;
 
@@ -92,7 +93,32 @@ public static class ApiV1Endpoints
                 })
             .WithName("GetApps")
             .WithTags("apps");
+
+        app.MapPost(
+                "/api/v1/launch",
+                async (
+                    LaunchRequestDto body,
+                    ProcessLaunchService launcher,
+                    CancellationToken cancellationToken) =>
+                {
+                    var outcome = await launcher
+                        .LaunchAsync(body.AppId ?? string.Empty, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (!outcome.Ok)
+                    {
+                        return Results.Json(
+                            new { ok = false, reason = outcome.Reason },
+                            statusCode: outcome.StatusCode);
+                    }
+
+                    return Results.Ok(
+                        new { ok = true, sessionId = outcome.SessionId, pid = outcome.Pid });
+                })
+            .WithName("PostLaunch")
+            .WithTags("launch");
     }
+
+    private sealed record LaunchRequestDto(string? AppId);
 
     private sealed record HealthResponse(string Status, string Database, DateTime TimestampUtc);
 

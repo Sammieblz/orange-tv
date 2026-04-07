@@ -68,6 +68,20 @@ export const SEED_HOME: HomeScreenData = {
       ],
     },
     {
+      id: "launch-demos",
+      title: "Launch demos (SAM-15)",
+      tiles: [
+        {
+          id: "launch-streaming-demo",
+          title: "Chrome — example.com",
+        },
+        {
+          id: "launch-mpv-demo",
+          title: "MPV — sample file",
+        },
+      ],
+    },
+    {
       id: "streaming",
       title: "Streaming",
       tiles: [

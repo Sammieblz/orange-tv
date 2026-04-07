@@ -4,21 +4,21 @@
 
 /**
  * @param {unknown} payload
- * @returns {{ valid: false; reason: string } | { valid: true; kind: string; id?: string }}
+ * @returns {{ valid: false; reason: string } | { valid: true; kind: "app"; id: string }}
  */
 function validateLaunchPayload(payload) {
   if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
     return { valid: false, reason: "invalid-payload" };
   }
   const kind = /** @type {{ kind?: unknown; id?: unknown }} */ (payload).kind;
-  if (typeof kind !== "string" || kind.length === 0 || kind.length > 64) {
-    return { valid: false, reason: "invalid-kind" };
+  if (kind !== "app") {
+    return { valid: false, reason: "unsupported-kind" };
   }
   const id = /** @type {{ kind?: unknown; id?: unknown }} */ (payload).id;
-  if (id !== undefined && (typeof id !== "string" || id.length > 256)) {
+  if (typeof id !== "string" || id.length === 0 || id.length > 256) {
     return { valid: false, reason: "invalid-id" };
   }
-  return { valid: true, kind, id };
+  return { valid: true, kind: "app", id };
 }
 
 /**

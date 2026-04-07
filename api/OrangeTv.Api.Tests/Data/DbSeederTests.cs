@@ -25,11 +25,11 @@ public sealed class DbSeederTests
             .ThenBy(a => a.Id)
             .ToListAsync();
         Assert.Equal(2, apps.Count);
-        Assert.Equal("streaming", apps[0].Id);
-        Assert.Equal("Streaming", apps[0].Label);
-        Assert.Equal("row", apps[0].Type);
-        Assert.Equal("local-media", apps[1].Id);
-        Assert.Equal("Local media", apps[1].Label);
+        Assert.Equal("launch-streaming-demo", apps[0].Id);
+        Assert.Equal("Open streaming (Chrome)", apps[0].Label);
+        Assert.Equal("chrome", apps[0].Type);
+        Assert.Equal("launch-mpv-demo", apps[1].Id);
+        Assert.Equal("Play sample (MPV)", apps[1].Label);
     }
 
     [Fact]

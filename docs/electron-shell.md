@@ -6,14 +6,14 @@ The TV launcher can run inside **Electron** (`launcher/electron/`). The **main**
 
 - **Renderer** must not use `require`, `process`, or `ipcRenderer` directly.
 - **Preload** ([`launcher/electron/preload.cjs`](../launcher/electron/preload.cjs)) exposes a fixed API on **`window.orangeTv`** via **`contextBridge`** only.
-- **Privileged work** (future HTTP to the local API, process launch) runs in **main** behind **`ipcMain.handle`** — never from React.
+- **Privileged work** (HTTP to the local API for launch, window chrome) runs in **main** behind **`ipcMain.handle`** — never from React.
 
 ## Preload API (renderer-facing)
 
 | Method | IPC | Behavior |
 | --- | --- | --- |
 | **`ping()`** | `orange-tv:ping` | Health check; returns `"pong"`. |
-| **`launchRequest(payload)`** | `orange-tv:launch-request` | Validates `payload` in main (`kind` string, optional `id` string). Currently returns **`not-implemented`** after logging; reserved for forwarding to the .NET service. |
+| **`launchRequest(payload)`** | `orange-tv:launch-request` | Validates `payload` in main (`kind` must be **`app`**, **`id`** required — seeded app id). Forwards **`POST /api/v1/launch`** to the local API (see **`ORANGETV_ELECTRON__API_BASE_URL`** in [`environment.md`](environment.md)); returns **`{ ok, sessionId?, pid? }`** or **`{ ok: false, reason }`**. |
 | **`getRuntimeMetadata()`** | _(sync in preload)_ | **Appliance** profile: minimal object (`shellProfile`, `channel`). **Dev** / default: includes engine versions; **non-dev** production omits raw **Node** version. |
 | **`onShellForeground(cb)`** | `orange-tv:shell-foreground` (main **sends** after window was blurred then focused again) | Subscribe for focus-recovery when returning from an external app; returns unsubscribe. |
 | **`setFullscreen(fullscreen)`** | `orange-tv:window-set-fullscreen` | **Main window only:** sets fullscreen on the shell `BrowserWindow` (window chrome only). |
