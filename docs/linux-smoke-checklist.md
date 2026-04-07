@@ -32,6 +32,12 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
   curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5144/weatherforecast
   ```
 
+- [ ] `GET /api/v1/health` returns **HTTP 200** and JSON with **`status`** and **`database`** (SQLite control plane).
+
+  ```bash
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5144/api/v1/health
+  ```
+
 - [ ] `GET /api/v1/system/platform` returns **HTTP 200** and JSON with **`isLinux: true`** (API runs in the VM).
 
   ```bash

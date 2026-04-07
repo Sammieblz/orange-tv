@@ -1,0 +1,179 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using OrangeTv.Api.Tests.Support;
+using Xunit;
+
+namespace OrangeTv.Api.Tests.Endpoints;
+
+public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplicationFactory>, IDisposable
+{
+    private readonly HttpClient _client;
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web);
+
+    public ControlPlaneEndpointsTests(ApiWebApplicationFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetHealth_returns_ok_and_database_ok()
+    {
+        var response = await _client.GetAsync("/api/v1/health");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<HealthResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(payload);
+        Assert.Equal("ok", payload.Status);
+        Assert.Equal("ok", payload.Database);
+    }
+
+    [Fact]
+    public async Task GetSettings_returns_ok_with_items_array()
+    {
+        var response = await _client.GetAsync("/api/v1/settings");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<SettingsListResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(payload);
+        Assert.NotNull(payload.Items);
+    }
+
+    [Fact]
+    public async Task PutSetting_then_GetSettings_includes_entry()
+    {
+        var put = await _client.PutAsJsonAsync(
+            "/api/v1/settings/theme",
+            new { value = "dark" },
+            _jsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var get = await _client.GetAsync("/api/v1/settings");
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+        var list = await get.Content.ReadFromJsonAsync<SettingsListResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(list);
+        Assert.Contains(list.Items, i => i.Key == "theme" && i.Value == "dark");
+    }
+
+    [Fact]
+    public async Task GetApps_returns_seed_rows()
+    {
+        var response = await _client.GetAsync("/api/v1/apps");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<AppsListResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(payload);
+        Assert.NotNull(payload.Items);
+        Assert.Equal(2, payload.Items.Length);
+        Assert.Equal("streaming", payload.Items[0].Id);
+        Assert.Equal("local-media", payload.Items[1].Id);
+    }
+
+    [Fact]
+    public async Task GetHealth_response_includes_status_database_and_timestamp()
+    {
+        var response = await _client.GetAsync("/api/v1/health");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var doc = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions, CancellationToken.None);
+        Assert.True(doc.TryGetProperty("status", out var status));
+        Assert.Equal("ok", status.GetString());
+        Assert.True(doc.TryGetProperty("database", out var database));
+        Assert.Equal("ok", database.GetString());
+        Assert.True(doc.TryGetProperty("timestampUtc", out var ts));
+        Assert.True(ts.GetDateTime() <= DateTime.UtcNow.AddMinutes(1));
+    }
+
+    [Theory]
+    [InlineData("%20")]
+    [InlineData("%09")]
+    public async Task PutSetting_whitespace_only_key_returns_bad_request(string encodedKeySegment)
+    {
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/settings/{encodedKeySegment}",
+            new { value = "x" },
+            _jsonOptions,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutSetting_key_longer_than_256_returns_bad_request()
+    {
+        var key = new string('a', 257);
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/settings/{key}",
+            new { value = "v" },
+            _jsonOptions,
+            CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PutSetting_updates_existing_row()
+    {
+        const string path = "/api/v1/settings/ui.accent";
+        await _client.PutAsJsonAsync(path, new { value = "orange" }, _jsonOptions, CancellationToken.None);
+        var second = await _client.PutAsJsonAsync(path, new { value = "ember" }, _jsonOptions, CancellationToken.None);
+
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        var body = await second.Content.ReadFromJsonAsync<SettingItemResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(body);
+        Assert.Equal("ui.accent", body.Key);
+        Assert.Equal("ember", body.Value);
+
+        var list = await _client.GetFromJsonAsync<SettingsListResponse>("/api/v1/settings", _jsonOptions, CancellationToken.None);
+        Assert.NotNull(list);
+        var row = Assert.Single(list.Items, i => i.Key == "ui.accent");
+        Assert.Equal("ember", row.Value);
+    }
+
+    [Fact]
+    public async Task PutSetting_put_response_matches_get_settings_for_same_key()
+    {
+        await _client.PutAsJsonAsync(
+            "/api/v1/settings/launcher.version",
+            new { value = "1" },
+            _jsonOptions,
+            CancellationToken.None);
+
+        var put = await _client.PutAsJsonAsync(
+            "/api/v1/settings/launcher.version",
+            new { value = "2" },
+            _jsonOptions,
+            CancellationToken.None);
+        var fromPut = await put.Content.ReadFromJsonAsync<SettingItemResponse>(_jsonOptions, CancellationToken.None);
+
+        var get = await _client.GetFromJsonAsync<SettingsListResponse>("/api/v1/settings", _jsonOptions, CancellationToken.None);
+        var fromGet = Assert.Single(get!.Items, i => i.Key == "launcher.version");
+
+        Assert.Equal(fromGet.Key, fromPut!.Key);
+        Assert.Equal(fromGet.Value, fromPut.Value);
+        Assert.Equal(fromGet.UpdatedAtUtc, fromPut.UpdatedAtUtc);
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+    }
+
+    private sealed record HealthResponse(string Status, string Database, DateTime TimestampUtc);
+
+    private sealed record SettingsListResponse(SettingItemResponse[] Items);
+
+    private sealed record SettingItemResponse(string Key, string? Value, DateTime UpdatedAtUtc);
+
+    private sealed record AppsListResponse(AppItemResponse[] Items);
+
+    private sealed record AppItemResponse(
+        string Id,
+        string Label,
+        string? Type,
+        string? LaunchUrl,
+        int SortOrder,
+        DateTime CreatedAtUtc,
+        DateTime UpdatedAtUtc);
+}
