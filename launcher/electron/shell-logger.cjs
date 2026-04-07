@@ -25,6 +25,23 @@ function error(message, meta) {
   console.error(formatLine("ERROR", message, meta));
 }
 
+/**
+ * @param {import("electron").App | undefined} app
+ */
+function installAppDiagnostics(app) {
+  if (!app?.on) {
+    return;
+  }
+  app.on("child-process-gone", (_event, details) => {
+    error("child-process-gone", {
+      type: details?.type,
+      reason: details?.reason,
+      name: details?.name,
+      serviceName: details?.serviceName,
+    });
+  });
+}
+
 function installMainProcessHandlers() {
   process.on("uncaughtException", (err) => {
     error("uncaughtException", {
@@ -98,5 +115,6 @@ module.exports = {
   warn,
   error,
   installMainProcessHandlers,
+  installAppDiagnostics,
   attachWindowDiagnostics,
 };
