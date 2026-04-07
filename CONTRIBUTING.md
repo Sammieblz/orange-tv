@@ -43,6 +43,12 @@ docs: expand Ubuntu VM setup stub
 
 **Body:** optional; use for context, breaking changes, or follow-ups.
 
+## Tests
+
+- **API (xUnit):** `dotnet test` from the repo root (or `dotnet test orange-tv.sln`). Covers `OrangeTv.Api` plus shell/path helpers and HTTP integration tests.
+- **Launcher (Vitest):** `npm --prefix launcher test`.
+- **Both:** `npm run test:all` runs launcher tests then `dotnet test`.
+
 ## Code style
 
 - **C# / .NET:** follow `.editorconfig` at repo root; run `dotnet format` when touching `api/`.

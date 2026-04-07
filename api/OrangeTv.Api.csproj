@@ -10,4 +10,10 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="OrangeTv.Api.Tests/**" />
+    <Content Remove="OrangeTv.Api.Tests/**" />
+    <None Remove="OrangeTv.Api.Tests/**" />
+  </ItemGroup>
+
 </Project>

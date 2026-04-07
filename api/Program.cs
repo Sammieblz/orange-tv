@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using OrangeTv.Api;
 using OrangeTv.Api.Platform;
 using OrangeTv.Api.Shell;
 
@@ -30,8 +31,9 @@ if (app.Environment.IsDevelopment())
     app.UseCors("DevLauncher");
     app.MapOpenApi();
 }
-else
+else if (!app.Environment.IsEnvironment("Testing"))
 {
+    // Integration tests use environment "Testing" with WebApplicationFactory (HTTP only; no HTTPS port).
     app.UseHttpsRedirection();
 }
 
@@ -71,7 +73,6 @@ app.MapGet(
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public partial class Program
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
