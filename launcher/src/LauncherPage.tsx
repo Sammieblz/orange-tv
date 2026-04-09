@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useApps } from "@/api/queries/useApps.ts";
 import { useContinueWatching } from "@/api/queries/useContinueWatching.ts";
+import { useHomeRecommendations } from "@/api/queries/useHomeRecommendations.ts";
 import { ApiStatusBar } from "@/components/ApiStatusBar/ApiStatusBar.tsx";
 import { AppShell } from "@/components/AppShell/AppShell.tsx";
 import { ContentRow } from "@/components/ContentRow/ContentRow.tsx";
@@ -10,6 +11,7 @@ import { Sidebar } from "@/components/Sidebar/Sidebar.tsx";
 import { Tile } from "@/components/Tile/Tile.tsx";
 import { mergeHomeScreenWithApps } from "@/data/mergeHomeWithApps.ts";
 import { mergeHomeWithContinueWatching } from "@/data/mergeHomeWithContinueWatching.ts";
+import { mergeHomeWithRecommendations } from "@/data/mergeHomeWithRecommendations.ts";
 import { SEED_HOME } from "@/data/seedHome.ts";
 import type { FocusActivatePayload } from "@/hooks/useFocusInputDispatch.ts";
 import { useLauncherGamepad } from "@/hooks/useLauncherGamepad.ts";
@@ -38,6 +40,7 @@ export function LauncherPage() {
         onLaunchSucceeded: () => {
           void queryClient.invalidateQueries({ queryKey: ["api", "apps"] });
           void queryClient.invalidateQueries({ queryKey: ["api", "watch", "continue"] });
+          void queryClient.invalidateQueries({ queryKey: ["api", "recommendations", "home"] });
         },
       });
     },

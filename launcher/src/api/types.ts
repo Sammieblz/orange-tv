@@ -45,3 +45,30 @@ export interface ContinueWatchingItemDto {
 export interface ContinueWatchingListDto {
   items: ContinueWatchingItemDto[];
 }
+
+export interface HomeRecommendationsDto {
+  engine: string;
+  mlRanker: string;
+  rankingRulesVersion: string;
+  continueRankingRulesVersion: string;
+  rows: RecommendationRowDto[];
+}
+
+export interface RecommendationRowDto {
+  rowId: string;
+  title: string;
+  source: string;
+  rankingRulesVersion: string;
+  items: RecommendationItemDto[];
+}
+
+/** Mirrors API record: use <code>kind</code> to distinguish media vs app tiles. */
+export interface RecommendationItemDto {
+  kind: string;
+  mediaItemId: string | null;
+  appId: string | null;
+  title: string | null;
+  label: string | null;
+  thumbnailRelativePath: string | null;
+  progress: number | null;
+}

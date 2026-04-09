@@ -191,6 +191,7 @@ public static class ApiV1Endpoints
 
         app.MapMediaEndpoints();
         app.MapWatchEndpoints();
+        app.MapRecommendationEndpoints();
     }
 
     private sealed record LaunchRequestDto(string? AppId);

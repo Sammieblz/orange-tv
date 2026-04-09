@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace OrangeTv.Api.Tests.Support;
 
@@ -23,6 +25,14 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                     {
                         ["ORANGETV_API:Data:SqlitePath"] = _sqlitePath,
                     });
+            });
+        builder.ConfigureServices(
+            services =>
+            {
+                if (services.All(d => d.ServiceType != typeof(IMemoryCache)))
+                {
+                    services.AddMemoryCache();
+                }
             });
     }
 

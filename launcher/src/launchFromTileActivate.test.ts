@@ -54,6 +54,21 @@ describe("launchAppTileIfActivated", () => {
     expect(onLaunchSucceeded).toHaveBeenCalledOnce();
   });
 
+  it("launches app-prefixed tiles", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+    vi.spyOn(useFocusStore.getState(), "requestShellFocusRestore").mockImplementation(() => {});
+
+    await launchAppTileIfActivated({ context: "tile", id: "app:launch-streaming-demo" });
+
+    expect(launchRequest).toHaveBeenCalledWith({
+      kind: "app",
+      id: "launch-streaming-demo",
+    });
+  });
+
   it("launches media tiles with kind media", async () => {
     const launchRequest = vi.fn(async () => ({ ok: true as const }));
     (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {

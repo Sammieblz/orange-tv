@@ -7,6 +7,7 @@ using OrangeTv.Api.Endpoints;
 using OrangeTv.Api.Services;
 using OrangeTv.Api.Platform;
 using OrangeTv.Api.Library;
+using OrangeTv.Api.Recommendations;
 using OrangeTv.Api.Shell;
 using Serilog;
 
@@ -53,6 +54,9 @@ builder.Services.AddSingleton<IMediaMetadataExtractor, FfProbeMediaMetadataExtra
 builder.Services.AddSingleton<IMediaThumbnailGenerator, FfmpegThumbnailGenerator>();
 builder.Services.AddSingleton<LibraryScannerService>();
 builder.Services.AddHostedService<LibraryScannerHostedService>();
+builder.Services.AddScoped<RulesRecommendationService>();
+builder.Services.AddSingleton<IMlRecommendationRanker, NoOpMlRecommendationRanker>();
+builder.Services.AddSingleton<RecommendationDiagnosticsState>();
 
 var app = builder.Build();
 
