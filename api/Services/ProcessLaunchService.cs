@@ -56,18 +56,34 @@ public sealed class ProcessLaunchService
         var type = app.Type?.Trim().ToLowerInvariant();
         return type switch
         {
-            "chrome" => await LaunchChromeAsync(app, cancellationToken).ConfigureAwait(false),
+            "chrome" => await LaunchChromeAsync(app, db, cancellationToken).ConfigureAwait(false),
             "mpv" => await LaunchMpvAsync(app, cancellationToken).ConfigureAwait(false),
             _ => LaunchOutcome.Failed("unsupported-app-type", StatusCodes.Status400BadRequest),
         };
     }
 
-    private async Task<LaunchOutcome> LaunchChromeAsync(AppEntity app, CancellationToken cancellationToken)
+    private async Task<LaunchOutcome> LaunchChromeAsync(
+        AppEntity app,
+        OrangeTvDbContext db,
+        CancellationToken cancellationToken)
     {
         var url = string.IsNullOrWhiteSpace(app.LaunchUrl) ? "about:blank" : app.LaunchUrl.Trim();
         var orangeRoot = BrowserShellPaths.ResolveOrangeTvDataRoot();
-        var userDataDir = Path.Combine(orangeRoot, "launch-chrome", "profile");
+        var settingsRow = await db.Settings.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == ChromeProfilePaths.ProfilesRootSettingKey, cancellationToken)
+            .ConfigureAwait(false);
+        var userDataDir = ChromeProfilePaths.ResolveUserDataDir(
+            orangeRoot,
+            settingsRow?.Value,
+            _apiOptions.Value.Launch.ChromeProfilesRoot,
+            app.Id,
+            app.ChromeProfileSegment,
+            _platform);
         Directory.CreateDirectory(userDataDir);
+        _logger.LogInformation(
+            "Chrome user-data-dir for {AppId}: {UserDataDir}",
+            app.Id,
+            userDataDir);
 
         Process? process = null;
         foreach (var candidate in BrowserShellExecutableCandidates.Enumerate(_browserShellOptions.Value, _platform))
@@ -227,8 +243,43 @@ public sealed class ProcessLaunchService
                         .ConfigureAwait(false);
                     if (row is not null)
                     {
-                        row.EndedAtUtc = DateTime.UtcNow;
+                        var endedAt = DateTime.UtcNow;
+                        var duration = endedAt - row.StartedAtUtc;
+                        row.EndedAtUtc = endedAt;
                         row.ExitCode = exitCode;
+
+                        var appRow = await db.Apps.FirstOrDefaultAsync(a => a.Id == row.AppId)
+                            .ConfigureAwait(false);
+                        if (appRow is not null)
+                        {
+                            var previousFreshness = appRow.SessionFreshness;
+                            var freshness = SessionFreshnessHeuristics.FromExit(exitCode, duration);
+                            appRow.LastSessionEndedAtUtc = endedAt;
+                            appRow.LastSessionExitCode = exitCode;
+                            appRow.SessionFreshness = freshness;
+                            appRow.UpdatedAtUtc = endedAt;
+
+                            if (previousFreshness != freshness)
+                            {
+                                _logger.LogInformation(
+                                    "App session freshness transition for {AppId}: {Previous} -> {Current} (exit {ExitCode}, durationMs {DurationMs}).",
+                                    row.AppId,
+                                    previousFreshness,
+                                    freshness,
+                                    exitCode,
+                                    (long)duration.TotalMilliseconds);
+                            }
+
+                            if (freshness is SessionFreshness.ResetSuggested or SessionFreshness.PossiblyStale)
+                            {
+                                _logger.LogInformation(
+                                    "Session reset or stale signal for {AppId}: freshness {Freshness}, exit {ExitCode}.",
+                                    row.AppId,
+                                    freshness,
+                                    exitCode);
+                            }
+                        }
+
                         await db.SaveChangesAsync().ConfigureAwait(false);
                     }
                 }

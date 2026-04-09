@@ -58,6 +58,17 @@
   overflow: hidden;
 }
 
+.sessionHint {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--color-muted);
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .tileFocused .caption {
   color: var(--color-text);
 }

@@ -24,6 +24,39 @@ export function stubApiFetchSuccess() {
         sampleNormalizedPath: "C:/Users/demo/file.txt",
       });
     }
+    if (url.includes("/api/v1/apps")) {
+      const now = new Date().toISOString();
+      return Response.json({
+        items: [
+          {
+            id: "launch-streaming-demo",
+            label: "Open streaming (Chrome)",
+            type: "chrome",
+            launchUrl: "https://example.com",
+            sortOrder: 0,
+            createdAtUtc: now,
+            updatedAtUtc: now,
+            chromeProfileSegment: null,
+            sessionFreshness: "Unknown",
+            lastSessionEndedAtUtc: null,
+            lastSessionExitCode: null,
+          },
+          {
+            id: "launch-mpv-demo",
+            label: "Play sample (MPV)",
+            type: "mpv",
+            launchUrl: "",
+            sortOrder: 1,
+            createdAtUtc: now,
+            updatedAtUtc: now,
+            chromeProfileSegment: null,
+            sessionFreshness: "Unknown",
+            lastSessionEndedAtUtc: null,
+            lastSessionExitCode: null,
+          },
+        ],
+      });
+    }
     return new Response("Not found", { status: 404 });
   });
 }

@@ -57,6 +57,7 @@ export function Tile({ tile, focused }: TileProps) {
         ) : null}
       </div>
       <span className={styles.caption}>{tile.title}</span>
+      {tile.sessionHint ? <span className={styles.sessionHint}>{tile.sessionHint}</span> : null}
     </div>
   );
 }

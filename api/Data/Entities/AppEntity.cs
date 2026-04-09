@@ -18,4 +18,13 @@ public sealed class AppEntity
     public DateTime CreatedAtUtc { get; set; }
 
     public DateTime UpdatedAtUtc { get; set; }
+
+    /// <summary>Optional subdirectory name under the resolved Chrome profiles parent; null uses sanitized <see cref="Id"/>.</summary>
+    public string? ChromeProfileSegment { get; set; }
+
+    public SessionFreshness SessionFreshness { get; set; }
+
+    public DateTime? LastSessionEndedAtUtc { get; set; }
+
+    public int? LastSessionExitCode { get; set; }
 }

@@ -40,4 +40,17 @@ describe("launchAppTileIfActivated", () => {
     expect(order).toEqual(["restore", "launch"]);
     expect(launchRequest).toHaveBeenCalledWith({ kind: "app", id: "launch-streaming-demo" });
   });
+
+  it("invokes onLaunchSucceeded after ok launch", async () => {
+    const onLaunchSucceeded = vi.fn();
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+    vi.spyOn(useFocusStore.getState(), "requestShellFocusRestore").mockImplementation(() => {});
+
+    await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" }, { onLaunchSucceeded });
+
+    expect(onLaunchSucceeded).toHaveBeenCalledOnce();
+  });
 });

@@ -7,6 +7,17 @@ namespace OrangeTv.Api.Endpoints;
 
 public static class ApiV1Endpoints
 {
+    internal static bool TryParseSessionFreshness(string? value, out SessionFreshness freshness)
+    {
+        freshness = SessionFreshness.Unknown;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return Enum.TryParse(value.Trim(), ignoreCase: true, out freshness);
+    }
+
     public static void MapApiV1Endpoints(this WebApplication app)
     {
         app.MapGet(
@@ -88,10 +99,48 @@ public static class ApiV1Endpoints
                                     a.LaunchUrl,
                                     a.SortOrder,
                                     a.CreatedAtUtc,
-                                    a.UpdatedAtUtc))
+                                    a.UpdatedAtUtc,
+                                    a.ChromeProfileSegment,
+                                    a.SessionFreshness.ToString(),
+                                    a.LastSessionEndedAtUtc,
+                                    a.LastSessionExitCode))
                                 .ToArray()));
                 })
             .WithName("GetApps")
+            .WithTags("apps");
+
+        app.MapPut(
+                "/api/v1/apps/{appId}/session-freshness",
+                async (
+                    string appId,
+                    PutAppSessionFreshnessRequest body,
+                    OrangeTvDbContext db,
+                    CancellationToken cancellationToken) =>
+                {
+                    if (string.IsNullOrWhiteSpace(appId) || appId.Length > 64)
+                    {
+                        return Results.BadRequest(new { error = "invalid-app-id" });
+                    }
+
+                    if (!TryParseSessionFreshness(body.Freshness, out var freshness))
+                    {
+                        return Results.BadRequest(new { error = "invalid-freshness" });
+                    }
+
+                    var app = await db.Apps.FirstOrDefaultAsync(a => a.Id == appId, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (app is null)
+                    {
+                        return Results.NotFound(new { error = "app-not-found" });
+                    }
+
+                    var now = DateTime.UtcNow;
+                    app.SessionFreshness = freshness;
+                    app.UpdatedAtUtc = now;
+                    await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    return Results.Ok(new AppSessionFreshnessResponse(app.Id, app.SessionFreshness.ToString(), app.UpdatedAtUtc));
+                })
+            .WithName("PutAppSessionFreshness")
             .WithTags("apps");
 
         app.MapPost(
@@ -137,5 +186,13 @@ public static class ApiV1Endpoints
         string? LaunchUrl,
         int SortOrder,
         DateTime CreatedAtUtc,
-        DateTime UpdatedAtUtc);
+        DateTime UpdatedAtUtc,
+        string? ChromeProfileSegment,
+        string SessionFreshness,
+        DateTime? LastSessionEndedAtUtc,
+        int? LastSessionExitCode);
+
+    private sealed record PutAppSessionFreshnessRequest(string? Freshness);
+
+    private sealed record AppSessionFreshnessResponse(string Id, string SessionFreshness, DateTime UpdatedAtUtc);
 }
