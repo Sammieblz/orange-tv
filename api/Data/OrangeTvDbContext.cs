@@ -16,6 +16,8 @@ public sealed class OrangeTvDbContext : DbContext
 
     public DbSet<LaunchSessionEntity> LaunchSessions => Set<LaunchSessionEntity>();
 
+    public DbSet<MediaItemEntity> MediaItems => Set<MediaItemEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppEntity>(e =>
@@ -50,6 +52,19 @@ public sealed class OrangeTvDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.AppId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MediaItemEntity>(e =>
+        {
+            e.ToTable("media_items");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.FilePath).HasMaxLength(4096).IsRequired();
+            e.HasIndex(x => x.FilePath).IsUnique();
+            e.Property(x => x.Title).HasMaxLength(512);
+            e.Property(x => x.MetadataJson).HasMaxLength(65536);
+            e.Property(x => x.ThumbnailRelativePath).HasMaxLength(1024);
+            e.Property(x => x.LastScanError).HasMaxLength(4096);
+            e.HasIndex(x => x.LastScannedAtUtc);
         });
     }
 }

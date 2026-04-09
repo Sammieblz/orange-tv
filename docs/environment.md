@@ -34,6 +34,7 @@ Examples:
 - `ORANGETV_API__BrowserShell__Enabled=false`
 - `ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium-browser`
 - `ORANGETV_API__Launch__ChromeProfilesRoot=C:/OrangeTvProfiles` — optional default **parent** directory for Chrome **`--user-data-dir`** segment folders when the **`launcher.chrome.profilesRoot`** setting is unset (see [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md)).
+- **`ORANGETV_API__Library__Enabled`** — `true` to run the local media scanner and **FileSystemWatcher** debounced rescans (requires **ffprobe**/**ffmpeg** on `PATH` for full metadata and thumbnails). See [`media-library.md`](media-library.md).
 
 ### BrowserShell and Electron
 
@@ -77,6 +78,8 @@ With the API running (default `http://localhost:5144`), baseline endpoints inclu
 - `GET` / `PUT /api/v1/settings` — persisted key/value settings (`PUT /api/v1/settings/{key}` with JSON `{ "value": "..." }`).
 - `GET /api/v1/apps` — launcher catalog rows (seeded when the database is empty), including Chrome session hints (`sessionFreshness`, etc.).
 - `PUT /api/v1/apps/{appId}/session-freshness` — JSON `{ "freshness": "PossiblyStale" }` (enum names: `Unknown`, `LikelyActive`, `PossiblyStale`, `ResetSuggested`) for operator overrides without touching profile files.
+- `GET /api/v1/media/items` — paginated indexed local files (`skip` / `take`).
+- `POST /api/v1/media/library/scan` — trigger asynchronous full library rescan (`202 Accepted`).
 - `POST /api/v1/launch` — JSON `{ "appId": "<id>" }` to spawn Chrome or MPV (see seeded apps in `api/Data/DbSeeder.cs`).
 
 **Chrome profiles:** the **`launcher.chrome.profilesRoot`** setting (via **`PUT /api/v1/settings/launcher.chrome.profilesRoot`**) overrides the env default for where profile segment folders live. Backup and DB-vs-profile confusion are documented in [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md).

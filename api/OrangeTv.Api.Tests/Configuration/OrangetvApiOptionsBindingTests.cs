@@ -63,4 +63,26 @@ public sealed class OrangetvApiOptionsBindingTests
 
         Assert.Equal(@"D:/profiles/chrome-root", options.Launch.ChromeProfilesRoot);
     }
+
+    [Fact]
+    public void Binds_Library_Enabled_and_Debounce_from_ORANGETV_API_section()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ORANGETV_API:Library:Enabled"] = "true",
+                    ["ORANGETV_API:Library:DebounceMilliseconds"] = "5000",
+                })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.Configure<OrangetvApiOptions>(configuration.GetSection(OrangetvApiOptions.SectionName));
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider.GetRequiredService<IOptions<OrangetvApiOptions>>().Value;
+
+        Assert.True(options.Library.Enabled);
+        Assert.Equal(5000, options.Library.DebounceMilliseconds);
+    }
 }
