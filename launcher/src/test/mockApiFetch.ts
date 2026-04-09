@@ -27,6 +27,37 @@ export function stubApiFetchSuccess() {
     if (url.includes("/api/v1/watch/continue")) {
       return Response.json({ items: [] });
     }
+    if (url.includes("/api/v1/recommendations/home")) {
+      return Response.json({
+        engine: "rules",
+        mlRanker: "none",
+        rankingRulesVersion: "rec-home-v1",
+        continueRankingRulesVersion: "cw-v1",
+        rows: [
+          {
+            rowId: "recent",
+            title: "Recent",
+            source: "rules",
+            rankingRulesVersion: "rec-home-v1",
+            items: [],
+          },
+          {
+            rowId: "top-apps",
+            title: "Top apps",
+            source: "rules",
+            rankingRulesVersion: "rec-home-v1",
+            items: [],
+          },
+          {
+            rowId: "picks",
+            title: "Picks for you",
+            source: "rules",
+            rankingRulesVersion: "rec-home-v1",
+            items: [],
+          },
+        ],
+      });
+    }
     if (url.includes("/api/v1/apps")) {
       const now = new Date().toISOString();
       return Response.json({

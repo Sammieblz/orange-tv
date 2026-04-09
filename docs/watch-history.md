@@ -23,3 +23,5 @@
 ## Launcher
 
 - Continue row tiles use ids `media:{guid}` and invoke `launchRequest({ kind: "media", mediaItemId })`, which maps to `POST /api/v1/launch/media/{id}` in the Electron main process.
+
+See also [recommendations-rules.md](recommendations-rules.md) for rules-based home rows (Recent, Top apps, Picks).

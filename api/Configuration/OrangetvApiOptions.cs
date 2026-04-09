@@ -12,6 +12,21 @@ public sealed class OrangetvApiOptions
     public LaunchOptions Launch { get; set; } = new();
 
     public LibraryOptions Library { get; set; } = new();
+
+    public RecommendationsOptions Recommendations { get; set; } = new();
+}
+
+/// <summary>Rules-based home feed (<c>ORANGETV_API__Recommendations__*</c>).</summary>
+public sealed class RecommendationsOptions
+{
+    /// <summary>Window for counting app launch events for Top apps row.</summary>
+    public int TopAppsLookbackDays { get; set; } = 30;
+
+    /// <summary>In-memory cache TTL for <c>GET /api/v1/recommendations/home</c>.</summary>
+    public int CacheTtlSeconds { get; set; } = 60;
+
+    /// <summary>Max media rows scanned for genre/time picks (newest first).</summary>
+    public int GenreCandidateScanLimit { get; set; } = 500;
 }
 
 /// <summary>

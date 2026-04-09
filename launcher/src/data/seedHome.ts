@@ -70,6 +70,24 @@ export const SEED_HOME: HomeScreenData = {
       ],
     },
     {
+      id: "recent",
+      title: "Recent",
+      tiles: [
+        { id: "recent-ph-1", title: "Loading…" },
+        { id: "recent-ph-2", title: "Loading…" },
+      ],
+    },
+    {
+      id: "top-apps",
+      title: "Top apps",
+      tiles: [{ id: "top-ph-1", title: "Loading…" }],
+    },
+    {
+      id: "picks",
+      title: "Picks for you",
+      tiles: [{ id: "picks-ph-1", title: "Loading…" }],
+    },
+    {
       id: "launch-demos",
       title: "Launch demos (SAM-15)",
       tiles: [

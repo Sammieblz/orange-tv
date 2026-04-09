@@ -5,6 +5,7 @@ import { useFocusStore } from "@/store/focusStore.ts";
 const LAUNCH_APP_TILE_IDS = new Set<string>(["launch-streaming-demo", "launch-mpv-demo"]);
 
 const MEDIA_TILE_PREFIX = "media:";
+const APP_TILE_PREFIX = "app:";
 
 export interface LaunchTileActivateOptions {
   /** Called after a successful IPC launch (e.g. refresh apps query). */
@@ -23,7 +24,8 @@ export async function launchAppTileIfActivated(
   }
 
   const isMediaTile = payload.id.startsWith(MEDIA_TILE_PREFIX);
-  if (!isMediaTile && !LAUNCH_APP_TILE_IDS.has(payload.id)) {
+  const isPrefixedApp = payload.id.startsWith(APP_TILE_PREFIX);
+  if (!isMediaTile && !isPrefixedApp && !LAUNCH_APP_TILE_IDS.has(payload.id)) {
     return;
   }
 
@@ -39,7 +41,10 @@ export async function launchAppTileIfActivated(
           kind: "media",
           mediaItemId: payload.id.slice(MEDIA_TILE_PREFIX.length),
         })
-      : await launch({ kind: "app", id: payload.id });
+      : await launch({
+          kind: "app",
+          id: isPrefixedApp ? payload.id.slice(APP_TILE_PREFIX.length) : payload.id,
+        });
     if (!result.ok) {
       console.error("[launcher] launch failed", result.reason ?? "(no reason)");
       return;
