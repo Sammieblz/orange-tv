@@ -10,6 +10,26 @@ public sealed class OrangetvApiOptions
     public DataOptions Data { get; set; } = new();
 
     public LaunchOptions Launch { get; set; } = new();
+
+    public LibraryOptions Library { get; set; } = new();
+}
+
+/// <summary>
+/// Local media library scanning (<c>ORANGETV_API__Library__*</c>).
+/// </summary>
+public sealed class LibraryOptions
+{
+    /// <summary>When false, watchers and startup scan are skipped.</summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>Root folders to scan (absolute paths).</summary>
+    public List<string> ScanRoots { get; set; } = [];
+
+    /// <summary>File extensions including dot, lowercased in config.</summary>
+    public List<string> FileExtensions { get; set; } = [".mp4", ".mkv", ".webm", ".avi", ".mov", ".mp3", ".flac", ".m4a", ".wav"];
+
+    /// <summary>Debounce delay after filesystem events before rescanning.</summary>
+    public int DebounceMilliseconds { get; set; } = 3000;
 }
 
 public sealed class LaunchOptions

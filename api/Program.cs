@@ -6,6 +6,7 @@ using OrangeTv.Api.Data;
 using OrangeTv.Api.Endpoints;
 using OrangeTv.Api.Services;
 using OrangeTv.Api.Platform;
+using OrangeTv.Api.Library;
 using OrangeTv.Api.Shell;
 using Serilog;
 
@@ -45,6 +46,11 @@ builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 builder.Services.Configure<BrowserShellOptions>(builder.Configuration.GetSection(BrowserShellOptions.SectionName));
 builder.Services.AddHostedService<ChromiumShellHostedService>();
 builder.Services.AddSingleton<ProcessLaunchService>();
+builder.Services.AddSingleton<LibraryRootsResolver>();
+builder.Services.AddSingleton<IMediaMetadataExtractor, FfProbeMediaMetadataExtractor>();
+builder.Services.AddSingleton<IMediaThumbnailGenerator, FfmpegThumbnailGenerator>();
+builder.Services.AddSingleton<LibraryScannerService>();
+builder.Services.AddHostedService<LibraryScannerHostedService>();
 
 var app = builder.Build();
 

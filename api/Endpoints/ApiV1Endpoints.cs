@@ -165,6 +165,8 @@ public static class ApiV1Endpoints
                 })
             .WithName("PostLaunch")
             .WithTags("launch");
+
+        app.MapMediaEndpoints();
     }
 
     private sealed record LaunchRequestDto(string? AppId);
