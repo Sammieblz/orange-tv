@@ -33,6 +33,25 @@ describe("validateLaunchPayload", () => {
   it("rejects id too long", () => {
     assert.strictEqual(validateLaunchPayload({ kind: "app", id: "a".repeat(257) }).valid, false);
   });
+
+  it("accepts kind media with valid guid", () => {
+    const r = validateLaunchPayload({
+      kind: "media",
+      mediaItemId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+    assert.strictEqual(r.valid, true);
+    if (r.valid) {
+      assert.strictEqual(r.kind, "media");
+      assert.strictEqual(r.mediaItemId, "550e8400-e29b-41d4-a716-446655440000");
+    }
+  });
+
+  it("rejects invalid media guid", () => {
+    assert.strictEqual(
+      validateLaunchPayload({ kind: "media", mediaItemId: "not-a-guid" }).valid,
+      false,
+    );
+  });
 });
 
 describe("validateWindowFullscreenPayload", () => {

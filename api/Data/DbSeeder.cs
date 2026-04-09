@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using OrangeTv.Api.Data.Entities;
+using OrangeTv.Api.Launch;
 
 namespace OrangeTv.Api.Data;
 
@@ -38,6 +39,32 @@ public static class DbSeeder
                 UpdatedAtUtc = now,
             });
 
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Ensures the synthetic MPV app used for <c>POST /api/v1/launch/media/…</c> exists (idempotent).</summary>
+    public static async Task EnsureLocalMediaLauncherAppAsync(
+        OrangeTvDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        const string id = LocalMediaAppConstants.AppId;
+        if (await db.Apps.AnyAsync(a => a.Id == id, cancellationToken).ConfigureAwait(false))
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        db.Apps.Add(
+            new AppEntity
+            {
+                Id = id,
+                Label = "Local library (MPV)",
+                Type = "mpv",
+                LaunchUrl = null,
+                SortOrder = 999,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now,
+            });
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

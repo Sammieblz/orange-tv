@@ -21,19 +21,22 @@ public sealed class ProcessLaunchService
     private readonly IOptions<OrangetvApiOptions> _apiOptions;
     private readonly IOptions<BrowserShellOptions> _browserShellOptions;
     private readonly IPlatformEnvironment _platform;
+    private readonly WatchHistoryWriteHelper _watch;
 
     public ProcessLaunchService(
         IServiceScopeFactory scopeFactory,
         ILogger<ProcessLaunchService> logger,
         IOptions<OrangetvApiOptions> apiOptions,
         IOptions<BrowserShellOptions> browserShellOptions,
-        IPlatformEnvironment platform)
+        IPlatformEnvironment platform,
+        WatchHistoryWriteHelper watch)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _apiOptions = apiOptions;
         _browserShellOptions = browserShellOptions;
         _platform = platform;
+        _watch = watch;
     }
 
     public async Task<LaunchOutcome> LaunchAsync(string appId, CancellationToken cancellationToken)
@@ -57,9 +60,63 @@ public sealed class ProcessLaunchService
         return type switch
         {
             "chrome" => await LaunchChromeAsync(app, db, cancellationToken).ConfigureAwait(false),
-            "mpv" => await LaunchMpvAsync(app, cancellationToken).ConfigureAwait(false),
+            "mpv" => await LaunchMpvAsync(app, db, cancellationToken).ConfigureAwait(false),
             _ => LaunchOutcome.Failed("unsupported-app-type", StatusCodes.Status400BadRequest),
         };
+    }
+
+    /// <summary>Launches MPV for an indexed <see cref="MediaItemEntity"/> (uses seeded <see cref="LocalMediaAppConstants.AppId"/>).</summary>
+    public async Task<LaunchOutcome> LaunchMediaItemAsync(Guid mediaItemId, CancellationToken cancellationToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<OrangeTvDbContext>();
+        var media = await db.MediaItems.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == mediaItemId, cancellationToken)
+            .ConfigureAwait(false);
+        if (media is null)
+        {
+            return LaunchOutcome.Failed("media-not-found", StatusCodes.Status404NotFound);
+        }
+
+        string mediaPath;
+        try
+        {
+            mediaPath = Path.GetFullPath(media.FilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Invalid MPV media path for media item {MediaId}.", mediaItemId);
+            return LaunchOutcome.Failed("mpv-invalid-path", StatusCodes.Status400BadRequest);
+        }
+
+        if (!File.Exists(mediaPath))
+        {
+            _logger.LogWarning("MPV media file not found: {Path}", mediaPath);
+            return LaunchOutcome.Failed("mpv-media-missing", StatusCodes.Status400BadRequest);
+        }
+
+        var appExists = await db.Apps.AsNoTracking()
+            .AnyAsync(a => a.Id == LocalMediaAppConstants.AppId, cancellationToken)
+            .ConfigureAwait(false);
+        if (!appExists)
+        {
+            return LaunchOutcome.Failed("local-media-app-missing", StatusCodes.Status503ServiceUnavailable);
+        }
+
+        var process = TryStartMpvProcess(mediaPath);
+        if (process is null)
+        {
+            _logger.LogWarning("No MPV executable could start for media item {MediaId}.", mediaItemId);
+            return LaunchOutcome.Failed("mpv-not-found", StatusCodes.Status503ServiceUnavailable);
+        }
+
+        return await FinalizeLaunchedProcessAsync(
+                process,
+                LocalMediaAppConstants.AppId,
+                mediaItemId,
+                LaunchTrackKind.Mpv,
+                cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async Task<LaunchOutcome> LaunchChromeAsync(
@@ -121,10 +178,11 @@ public sealed class ProcessLaunchService
             return LaunchOutcome.Failed("chrome-not-found", StatusCodes.Status503ServiceUnavailable);
         }
 
-        return await FinalizeLaunchedProcessAsync(process, app.Id, cancellationToken).ConfigureAwait(false);
+        return await FinalizeLaunchedProcessAsync(process, app.Id, null, LaunchTrackKind.Chrome, cancellationToken)
+            .ConfigureAwait(false);
     }
 
-    private async Task<LaunchOutcome> LaunchMpvAsync(AppEntity app, CancellationToken cancellationToken)
+    private async Task<LaunchOutcome> LaunchMpvAsync(AppEntity app, OrangeTvDbContext db, CancellationToken cancellationToken)
     {
         var mediaPath = !string.IsNullOrWhiteSpace(app.LaunchUrl)
             ? app.LaunchUrl.Trim()
@@ -150,7 +208,34 @@ public sealed class ProcessLaunchService
             return LaunchOutcome.Failed("mpv-media-missing", StatusCodes.Status400BadRequest);
         }
 
-        Process? process = null;
+        var mediaItemId = await ResolveMediaItemIdForPathAsync(db, mediaPath, cancellationToken).ConfigureAwait(false);
+
+        var process = TryStartMpvProcess(mediaPath);
+        if (process is null)
+        {
+            _logger.LogWarning("No MPV executable could start for app {AppId}.", app.Id);
+            return LaunchOutcome.Failed("mpv-not-found", StatusCodes.Status503ServiceUnavailable);
+        }
+
+        return await FinalizeLaunchedProcessAsync(process, app.Id, mediaItemId, LaunchTrackKind.Mpv, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static async Task<Guid?> ResolveMediaItemIdForPathAsync(
+        OrangeTvDbContext db,
+        string fullPath,
+        CancellationToken cancellationToken)
+    {
+        var id = await db.MediaItems.AsNoTracking()
+            .Where(m => m.FilePath == fullPath)
+            .Select(m => m.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return id == Guid.Empty ? null : id;
+    }
+
+    private Process? TryStartMpvProcess(string mediaPath)
+    {
         foreach (var candidate in MpvExecutableCandidates.Enumerate(_platform))
         {
             try
@@ -163,10 +248,10 @@ public sealed class ProcessLaunchService
                     RedirectStandardError = true,
                 };
                 psi.ArgumentList.Add(mediaPath);
-                process = Process.Start(psi);
+                var process = Process.Start(psi);
                 if (process is not null)
                 {
-                    break;
+                    return process;
                 }
             }
             catch (Exception ex)
@@ -175,18 +260,14 @@ public sealed class ProcessLaunchService
             }
         }
 
-        if (process is null)
-        {
-            _logger.LogWarning("No MPV executable could start for app {AppId}.", app.Id);
-            return LaunchOutcome.Failed("mpv-not-found", StatusCodes.Status503ServiceUnavailable);
-        }
-
-        return await FinalizeLaunchedProcessAsync(process, app.Id, cancellationToken).ConfigureAwait(false);
+        return null;
     }
 
     private async Task<LaunchOutcome> FinalizeLaunchedProcessAsync(
         Process process,
         string appId,
+        Guid? mediaItemId,
+        LaunchTrackKind track,
         CancellationToken cancellationToken)
     {
         process.EnableRaisingEvents = true;
@@ -204,7 +285,23 @@ public sealed class ProcessLaunchService
                     AppId = appId,
                     Pid = pid,
                     StartedAtUtc = startedAt,
+                    MediaItemId = mediaItemId,
                 });
+
+            var startType = track == LaunchTrackKind.Chrome ? WatchEventType.AppLaunched : WatchEventType.PlaybackStarted;
+            _watch.AddEvent(
+                db,
+                new WatchEventEntity
+                {
+                    Id = Guid.NewGuid(),
+                    OccurredAtUtc = startedAt,
+                    EventType = startType,
+                    LaunchSessionId = sessionId,
+                    AppId = appId,
+                    MediaItemId = mediaItemId,
+                },
+                startedAt);
+
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -239,6 +336,7 @@ public sealed class ProcessLaunchService
                 {
                     using var scope = _scopeFactory.CreateScope();
                     var db = scope.ServiceProvider.GetRequiredService<OrangeTvDbContext>();
+                    var watch = scope.ServiceProvider.GetRequiredService<WatchHistoryWriteHelper>();
                     var row = await db.LaunchSessions.FirstOrDefaultAsync(s => s.Id == sessionId)
                         .ConfigureAwait(false);
                     if (row is not null)
@@ -280,6 +378,36 @@ public sealed class ProcessLaunchService
                             }
                         }
 
+                        double? positionSeconds = null;
+                        double? durationSeconds = null;
+                        if (row.MediaItemId is Guid mid)
+                        {
+                            var media = await db.MediaItems.AsNoTracking()
+                                .FirstOrDefaultAsync(m => m.Id == mid)
+                                .ConfigureAwait(false);
+                            if (media?.DurationSeconds is double total && total > 0)
+                            {
+                                durationSeconds = total;
+                                var elapsed = duration.TotalSeconds;
+                                positionSeconds = Math.Min(elapsed, total * 0.999);
+                            }
+                        }
+
+                        watch.AddEvent(
+                            db,
+                            new WatchEventEntity
+                            {
+                                Id = Guid.NewGuid(),
+                                OccurredAtUtc = endedAt,
+                                EventType = WatchEventType.PlaybackEnded,
+                                LaunchSessionId = sessionId,
+                                AppId = row.AppId,
+                                MediaItemId = row.MediaItemId,
+                                PositionSeconds = positionSeconds,
+                                DurationSeconds = durationSeconds,
+                            },
+                            endedAt);
+
                         await db.SaveChangesAsync().ConfigureAwait(false);
                     }
                 }
@@ -306,6 +434,12 @@ public sealed class ProcessLaunchService
             "Launch session {SessionId} exited with code {ExitCode}.",
             sessionId,
             exitCode);
+    }
+
+    private enum LaunchTrackKind
+    {
+        Chrome,
+        Mpv,
     }
 }
 

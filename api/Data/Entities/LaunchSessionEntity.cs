@@ -17,6 +17,9 @@ public sealed class LaunchSessionEntity
 
     public int? ExitCode { get; set; }
 
+    /// <summary>When MPV plays an indexed library file, links to <c>media_items</c>.</summary>
+    public Guid? MediaItemId { get; set; }
+
     /// <summary>Populated when <see cref="System.Diagnostics.Process.Start"/> fails before a PID exists.</summary>
     public string? SpawnError { get; set; }
 }

@@ -59,7 +59,52 @@ async function postLaunch(appId) {
   }
 }
 
+/**
+ * @param {string} mediaItemId
+ * @returns {Promise<{ ok: boolean; reason?: string; sessionId?: string; pid?: number }>}
+ */
+async function postLaunchMedia(mediaItemId) {
+  const base = resolveApiBaseUrl();
+  const url = `${base}/api/v1/launch/media/${encodeURIComponent(mediaItemId)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60_000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+    });
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      // ignore
+    }
+    if (!res.ok) {
+      const reason =
+        typeof data.reason === "string" ? data.reason : `http-${res.status}`;
+      return { ok: false, reason };
+    }
+    if (data.ok === false) {
+      return { ok: false, reason: typeof data.reason === "string" ? data.reason : "launch-failed" };
+    }
+    return {
+      ok: true,
+      sessionId: typeof data.sessionId === "string" ? data.sessionId : undefined,
+      pid: typeof data.pid === "number" ? data.pid : undefined,
+    };
+  } catch (e) {
+    return { ok: false, reason: "network-error" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 module.exports = {
   resolveApiBaseUrl,
   postLaunch,
+  postLaunchMedia,
 };

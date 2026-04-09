@@ -45,6 +45,8 @@ builder.Services.AddDbContext<OrangeTvDbContext>(
 builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
 builder.Services.Configure<BrowserShellOptions>(builder.Configuration.GetSection(BrowserShellOptions.SectionName));
 builder.Services.AddHostedService<ChromiumShellHostedService>();
+builder.Services.AddSingleton<WatchAggregationService>();
+builder.Services.AddSingleton<WatchHistoryWriteHelper>();
 builder.Services.AddSingleton<ProcessLaunchService>();
 builder.Services.AddSingleton<LibraryRootsResolver>();
 builder.Services.AddSingleton<IMediaMetadataExtractor, FfProbeMediaMetadataExtractor>();
@@ -128,6 +130,7 @@ static async Task ApplyDatabaseAsync(WebApplication app)
     {
         await db.Database.MigrateAsync().ConfigureAwait(false);
         await DbSeeder.SeedAsync(db).ConfigureAwait(false);
+        await DbSeeder.EnsureLocalMediaLauncherAppAsync(db).ConfigureAwait(false);
     }
     catch (Exception ex)
     {

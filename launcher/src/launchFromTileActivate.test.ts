@@ -53,4 +53,22 @@ describe("launchAppTileIfActivated", () => {
 
     expect(onLaunchSucceeded).toHaveBeenCalledOnce();
   });
+
+  it("launches media tiles with kind media", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+    vi.spyOn(useFocusStore.getState(), "requestShellFocusRestore").mockImplementation(() => {});
+
+    await launchAppTileIfActivated({
+      context: "tile",
+      id: "media:550e8400-e29b-41d4-a716-446655440000",
+    });
+
+    expect(launchRequest).toHaveBeenCalledWith({
+      kind: "media",
+      mediaItemId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+  });
 });

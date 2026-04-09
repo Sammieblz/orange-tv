@@ -8,7 +8,7 @@ const {
   validateLaunchPayload,
   validateWindowFullscreenPayload,
 } = require("./ipc-payload.cjs");
-const { postLaunch } = require("./ipc-launch.cjs");
+const { postLaunch, postLaunchMedia } = require("./ipc-launch.cjs");
 
 shellLogger.installMainProcessHandlers();
 shellLogger.installAppDiagnostics(app);
@@ -33,12 +33,16 @@ function registerIpcHandlers() {
       return { ok: false, reason: parsed.reason };
     }
     try {
-      const result = await postLaunch(parsed.id);
+      const result =
+        parsed.kind === "app"
+          ? await postLaunch(parsed.id)
+          : await postLaunchMedia(parsed.mediaItemId);
       if (result.ok) {
         shellLogger.info("launch_outcome", {
           event: "launch_outcome",
           ok: true,
-          appId: parsed.id,
+          appId: parsed.kind === "app" ? parsed.id : undefined,
+          mediaItemId: parsed.kind === "media" ? parsed.mediaItemId : undefined,
           sessionId: result.sessionId,
           pid: result.pid,
         });
@@ -47,7 +51,8 @@ function registerIpcHandlers() {
           event: "launch_outcome",
           ok: false,
           reason: result.reason,
-          appId: parsed.id,
+          appId: parsed.kind === "app" ? parsed.id : undefined,
+          mediaItemId: parsed.kind === "media" ? parsed.mediaItemId : undefined,
         });
       }
       return result;

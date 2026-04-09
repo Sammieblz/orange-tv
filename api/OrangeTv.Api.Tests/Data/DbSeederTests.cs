@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OrangeTv.Api.Data;
+using OrangeTv.Api.Launch;
 using Xunit;
 
 namespace OrangeTv.Api.Tests.Data;
@@ -48,5 +49,42 @@ public sealed class DbSeederTests
         await DbSeeder.SeedAsync(db);
 
         Assert.Equal(2, await db.Apps.CountAsync());
+    }
+
+    [Fact]
+    public async Task EnsureLocalMediaLauncherAppAsync_inserts_local_media_app_when_missing()
+    {
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<OrangeTvDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new OrangeTvDbContext(options);
+        await db.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(db);
+        await DbSeeder.EnsureLocalMediaLauncherAppAsync(db);
+
+        var app = await db.Apps.AsNoTracking().SingleAsync(a => a.Id == LocalMediaAppConstants.AppId);
+        Assert.Equal("Local library (MPV)", app.Label);
+        Assert.Equal("mpv", app.Type);
+    }
+
+    [Fact]
+    public async Task EnsureLocalMediaLauncherAppAsync_second_call_is_idempotent()
+    {
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<OrangeTvDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using var db = new OrangeTvDbContext(options);
+        await db.Database.MigrateAsync();
+        await DbSeeder.SeedAsync(db);
+        await DbSeeder.EnsureLocalMediaLauncherAppAsync(db);
+        await DbSeeder.EnsureLocalMediaLauncherAppAsync(db);
+
+        Assert.Equal(1, await db.Apps.CountAsync(a => a.Id == LocalMediaAppConstants.AppId));
     }
 }
