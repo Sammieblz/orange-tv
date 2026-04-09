@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useApps } from "@/api/queries/useApps.ts";
+import { useContinueWatching } from "@/api/queries/useContinueWatching.ts";
 import { ApiStatusBar } from "@/components/ApiStatusBar/ApiStatusBar.tsx";
 import { AppShell } from "@/components/AppShell/AppShell.tsx";
 import { ContentRow } from "@/components/ContentRow/ContentRow.tsx";
@@ -8,6 +9,7 @@ import { Hero } from "@/components/Hero/Hero.tsx";
 import { Sidebar } from "@/components/Sidebar/Sidebar.tsx";
 import { Tile } from "@/components/Tile/Tile.tsx";
 import { mergeHomeScreenWithApps } from "@/data/mergeHomeWithApps.ts";
+import { mergeHomeWithContinueWatching } from "@/data/mergeHomeWithContinueWatching.ts";
 import { SEED_HOME } from "@/data/seedHome.ts";
 import type { FocusActivatePayload } from "@/hooks/useFocusInputDispatch.ts";
 import { useLauncherGamepad } from "@/hooks/useLauncherGamepad.ts";
@@ -19,9 +21,14 @@ import { useFocusStore } from "@/store/focusStore.ts";
 export function LauncherPage() {
   const queryClient = useQueryClient();
   const appsQuery = useApps();
+  const continueQuery = useContinueWatching();
   const home = useMemo(
-    () => mergeHomeScreenWithApps(SEED_HOME, appsQuery.data?.items),
-    [appsQuery.data?.items],
+    () =>
+      mergeHomeScreenWithApps(
+        mergeHomeWithContinueWatching(SEED_HOME, continueQuery.data?.items),
+        appsQuery.data?.items,
+      ),
+    [continueQuery.data?.items, appsQuery.data?.items],
   );
   const focus = useFocusStore((s) => s.focus);
 
@@ -30,6 +37,7 @@ export function LauncherPage() {
       void launchAppTileIfActivated(payload, {
         onLaunchSucceeded: () => {
           void queryClient.invalidateQueries({ queryKey: ["api", "apps"] });
+          void queryClient.invalidateQueries({ queryKey: ["api", "watch", "continue"] });
         },
       });
     },

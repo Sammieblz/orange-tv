@@ -24,6 +24,9 @@ export function stubApiFetchSuccess() {
         sampleNormalizedPath: "C:/Users/demo/file.txt",
       });
     }
+    if (url.includes("/api/v1/watch/continue")) {
+      return Response.json({ items: [] });
+    }
     if (url.includes("/api/v1/apps")) {
       const now = new Date().toISOString();
       return Response.json({

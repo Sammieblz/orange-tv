@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using OrangeTv.Api.Launch;
 using OrangeTv.Api.Tests.Support;
 using Xunit;
 
@@ -65,9 +66,10 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
         var payload = await response.Content.ReadFromJsonAsync<AppsListResponse>(_jsonOptions, CancellationToken.None);
         Assert.NotNull(payload);
         Assert.NotNull(payload.Items);
-        Assert.Equal(2, payload.Items.Length);
+        Assert.Equal(3, payload.Items.Length);
         Assert.Equal("launch-streaming-demo", payload.Items[0].Id);
         Assert.Equal("launch-mpv-demo", payload.Items[1].Id);
+        Assert.Equal(LocalMediaAppConstants.AppId, payload.Items[2].Id);
         Assert.NotNull(payload.Items[0].SessionFreshness);
     }
 

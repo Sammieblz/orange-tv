@@ -166,7 +166,31 @@ public static class ApiV1Endpoints
             .WithName("PostLaunch")
             .WithTags("launch");
 
+        app.MapPost(
+                "/api/v1/launch/media/{mediaItemId:guid}",
+                async (
+                    Guid mediaItemId,
+                    ProcessLaunchService launcher,
+                    CancellationToken cancellationToken) =>
+                {
+                    var outcome = await launcher
+                        .LaunchMediaItemAsync(mediaItemId, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (!outcome.Ok)
+                    {
+                        return Results.Json(
+                            new { ok = false, reason = outcome.Reason },
+                            statusCode: outcome.StatusCode);
+                    }
+
+                    return Results.Ok(
+                        new { ok = true, sessionId = outcome.SessionId, pid = outcome.Pid });
+                })
+            .WithName("PostLaunchMedia")
+            .WithTags("launch");
+
         app.MapMediaEndpoints();
+        app.MapWatchEndpoints();
     }
 
     private sealed record LaunchRequestDto(string? AppId);

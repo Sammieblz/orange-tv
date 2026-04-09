@@ -33,3 +33,15 @@ export interface AppDto {
 export interface AppsListDto {
   items: AppDto[];
 }
+
+export interface ContinueWatchingItemDto {
+  mediaItemId: string;
+  title: string;
+  thumbnailRelativePath: string | null;
+  progress: number;
+  lastPlayedAtUtc: string;
+}
+
+export interface ContinueWatchingListDto {
+  items: ContinueWatchingItemDto[];
+}

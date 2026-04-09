@@ -17,7 +17,9 @@ interface OrangeTvRuntimeMetadataFull {
 /** Exposed from `electron/preload.cjs` when running under Electron. */
 interface OrangeTvPreload {
   ping: () => Promise<string>;
-  launchRequest: (payload: { kind: "app"; id: string }) => Promise<{
+  launchRequest: (
+    payload: { kind: "app"; id: string } | { kind: "media"; mediaItemId: string },
+  ) => Promise<{
     ok: boolean;
     reason?: string;
     sessionId?: string;

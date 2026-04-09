@@ -18,6 +18,10 @@ public sealed class OrangeTvDbContext : DbContext
 
     public DbSet<MediaItemEntity> MediaItems => Set<MediaItemEntity>();
 
+    public DbSet<WatchEventEntity> WatchEvents => Set<WatchEventEntity>();
+
+    public DbSet<MediaResumeEntity> MediaResumes => Set<MediaResumeEntity>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AppEntity>(e =>
@@ -48,10 +52,15 @@ public sealed class OrangeTvDbContext : DbContext
             e.Property(x => x.AppId).HasMaxLength(64).IsRequired();
             e.Property(x => x.SpawnError).HasMaxLength(2048);
             e.HasIndex(x => x.StartedAtUtc);
+            e.HasIndex(x => x.MediaItemId);
             e.HasOne<AppEntity>()
                 .WithMany()
                 .HasForeignKey(x => x.AppId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<MediaItemEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.MediaItemId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MediaItemEntity>(e =>
@@ -65,6 +74,40 @@ public sealed class OrangeTvDbContext : DbContext
             e.Property(x => x.ThumbnailRelativePath).HasMaxLength(1024);
             e.Property(x => x.LastScanError).HasMaxLength(4096);
             e.HasIndex(x => x.LastScannedAtUtc);
+        });
+
+        modelBuilder.Entity<WatchEventEntity>(e =>
+        {
+            e.ToTable("watch_events");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.EventType).HasConversion<byte>();
+            e.Property(x => x.AppId).HasMaxLength(64);
+            e.Property(x => x.PayloadJson).HasMaxLength(65536);
+            e.HasIndex(x => x.OccurredAtUtc);
+            e.HasIndex(x => new { x.MediaItemId, x.OccurredAtUtc });
+            e.HasOne<LaunchSessionEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.LaunchSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<AppEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.AppId)
+                .OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<MediaItemEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.MediaItemId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<MediaResumeEntity>(e =>
+        {
+            e.ToTable("media_resume");
+            e.HasKey(x => x.MediaItemId);
+            e.HasIndex(x => x.LastPlayedAtUtc);
+            e.HasOne<MediaItemEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.MediaItemId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
