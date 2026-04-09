@@ -68,6 +68,42 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
         Assert.Equal(2, payload.Items.Length);
         Assert.Equal("launch-streaming-demo", payload.Items[0].Id);
         Assert.Equal("launch-mpv-demo", payload.Items[1].Id);
+        Assert.NotNull(payload.Items[0].SessionFreshness);
+    }
+
+    [Fact]
+    public async Task PutAppSessionFreshness_updates_app_row()
+    {
+        var put = await _client.PutAsJsonAsync(
+            "/api/v1/apps/launch-streaming-demo/session-freshness",
+            new { freshness = "PossiblyStale" },
+            _jsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var get = await _client.GetAsync("/api/v1/apps");
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+        var list = await get.Content.ReadFromJsonAsync<AppsListResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(list);
+        var app = Assert.Single(list!.Items, i => i.Id == "launch-streaming-demo");
+        Assert.Equal("PossiblyStale", app.SessionFreshness);
+
+        await _client.PutAsJsonAsync(
+            "/api/v1/apps/launch-streaming-demo/session-freshness",
+            new { freshness = "Unknown" },
+            _jsonOptions,
+            CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task PutAppSessionFreshness_unknown_app_returns_404()
+    {
+        var put = await _client.PutAsJsonAsync(
+            "/api/v1/apps/missing-app/session-freshness",
+            new { freshness = "LikelyActive" },
+            _jsonOptions,
+            CancellationToken.None);
+        Assert.Equal(HttpStatusCode.NotFound, put.StatusCode);
     }
 
     [Fact]
@@ -209,5 +245,9 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
         string? LaunchUrl,
         int SortOrder,
         DateTime CreatedAtUtc,
-        DateTime UpdatedAtUtc);
+        DateTime UpdatedAtUtc,
+        string? ChromeProfileSegment,
+        string SessionFreshness,
+        DateTime? LastSessionEndedAtUtc,
+        int? LastSessionExitCode);
 }

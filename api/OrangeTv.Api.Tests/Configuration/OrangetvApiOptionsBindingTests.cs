@@ -43,4 +43,24 @@ public sealed class OrangetvApiOptionsBindingTests
 
         Assert.Null(options.Data.SqlitePath);
     }
+
+    [Fact]
+    public void Binds_Launch_ChromeProfilesRoot_from_ORANGETV_API_section()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ORANGETV_API:Launch:ChromeProfilesRoot"] = @"D:/profiles/chrome-root",
+                })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.Configure<OrangetvApiOptions>(configuration.GetSection(OrangetvApiOptions.SectionName));
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider.GetRequiredService<IOptions<OrangetvApiOptions>>().Value;
+
+        Assert.Equal(@"D:/profiles/chrome-root", options.Launch.ChromeProfilesRoot);
+    }
 }

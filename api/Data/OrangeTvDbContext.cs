@@ -26,6 +26,8 @@ public sealed class OrangeTvDbContext : DbContext
             e.Property(x => x.Label).HasMaxLength(256).IsRequired();
             e.Property(x => x.Type).HasMaxLength(64);
             e.Property(x => x.LaunchUrl).HasMaxLength(2048);
+            e.Property(x => x.ChromeProfileSegment).HasMaxLength(128);
+            e.Property(x => x.SessionFreshness).HasConversion<int>();
             e.HasIndex(x => x.SortOrder);
         });
 

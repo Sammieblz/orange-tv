@@ -19,6 +19,8 @@ export interface TileDescriptor {
   disabled?: boolean;
   /** 0–1 watched fraction for continue-watching style */
   progress?: number;
+  /** Short line from API session metadata (chrome targets); not a guarantee of login state */
+  sessionHint?: string;
 }
 
 export interface HomeRow {

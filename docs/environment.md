@@ -33,6 +33,7 @@ Examples:
 - `ORANGETV_API__Features__EnableDiagnostics=true`
 - `ORANGETV_API__BrowserShell__Enabled=false`
 - `ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium-browser`
+- `ORANGETV_API__Launch__ChromeProfilesRoot=C:/OrangeTvProfiles` — optional default **parent** directory for Chrome **`--user-data-dir`** segment folders when the **`launcher.chrome.profilesRoot`** setting is unset (see [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md)).
 
 ### BrowserShell and Electron
 
@@ -74,12 +75,15 @@ With the API running (default `http://localhost:5144`), baseline endpoints inclu
 
 - `GET /api/v1/health` — SQLite connectivity and service status.
 - `GET` / `PUT /api/v1/settings` — persisted key/value settings (`PUT /api/v1/settings/{key}` with JSON `{ "value": "..." }`).
-- `GET /api/v1/apps` — launcher catalog rows (seeded when the database is empty).
+- `GET /api/v1/apps` — launcher catalog rows (seeded when the database is empty), including Chrome session hints (`sessionFreshness`, etc.).
+- `PUT /api/v1/apps/{appId}/session-freshness` — JSON `{ "freshness": "PossiblyStale" }` (enum names: `Unknown`, `LikelyActive`, `PossiblyStale`, `ResetSuggested`) for operator overrides without touching profile files.
 - `POST /api/v1/launch` — JSON `{ "appId": "<id>" }` to spawn Chrome or MPV (see seeded apps in `api/Data/DbSeeder.cs`).
+
+**Chrome profiles:** the **`launcher.chrome.profilesRoot`** setting (via **`PUT /api/v1/settings/launcher.chrome.profilesRoot`**) overrides the env default for where profile segment folders live. Backup and DB-vs-profile confusion are documented in [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md).
 
 **MPV sample file (dev):** when the seeded MPV app has no `LaunchUrl`, the API reads **`ORANGETV_API__Launch__SampleMediaPath`** (see `api/Configuration/OrangetvApiOptions.cs`). Point it at a real media file on your machine; leave unset in CI.
 
-The SQLite file defaults to `%LOCALAPPDATA%\OrangeTv\orange-tv.db` on Windows when `ORANGETV_API__Data__SqlitePath` is unset (see `.env.example`).
+The SQLite file defaults to `%LOCALAPPDATA%\OrangeTv\orange-tv.db` on Windows when `ORANGETV_API__Data__SqlitePath` is unset (see `.env.example`). That file is **not** the Chrome profile tree; do not delete profile directories when you only mean to reset the database.
 
 ## Source of truth
 

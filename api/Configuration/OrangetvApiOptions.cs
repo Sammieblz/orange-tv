@@ -19,6 +19,12 @@ public sealed class LaunchOptions
     /// Set via <c>ORANGETV_API__Launch__SampleMediaPath</c>.
     /// </summary>
     public string? SampleMediaPath { get; set; }
+
+    /// <summary>
+    /// Default parent directory for Chrome <c>--user-data-dir</c> segment folders when
+    /// <c>launcher.chrome.profilesRoot</c> is unset. Set via <c>ORANGETV_API__Launch__ChromeProfilesRoot</c>.
+    /// </summary>
+    public string? ChromeProfilesRoot { get; set; }
 }
 
 public sealed class DataOptions
