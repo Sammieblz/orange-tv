@@ -20,7 +20,7 @@ sequenceDiagram
   WC->>Renderer: navigation
   WC->>Lifecycle: ready-to-show
   Lifecycle->>WC: show
-  Note over Lifecycle,WC: Linux: optional setFullScreen/setKiosk after show
+  Note over Lifecycle,WC: optional setFullScreen/setKiosk after show
   Lifecycle->>WC: openDevTools optional
   WC->>Renderer: blur or focus
   alt focus after blur
@@ -30,7 +30,7 @@ sequenceDiagram
 
 1. **`app.whenReady`** — `main.cjs` logs [`getShellWindowMode`](#shell-modes) and calls **`createWindow()`**.
 2. **`createMainWindow`** ([`window-lifecycle.cjs`](../launcher/electron/window-lifecycle.cjs)) — reads [`getWindowChromeOptions`](../launcher/electron/shell-profile.cjs) from the primary display **work area**, creates **`BrowserWindow`** with `show: false`, attaches diagnostics, wires **blur/focus** (for [`SHELL_FOREGROUND`](gamepad-focus-recovery.md)), and starts **load** (`loadURL` in dev, `loadFile` for `dist` in prod).
-3. **`ready-to-show`** — **`show()`**, then on **Linux** only **[`applyPostShowFullscreenChrome`](../launcher/electron/window-lifecycle.cjs)** may call **`setFullScreen` / `setKiosk`** again so some window managers honor fullscreen reliably.
+3. **`ready-to-show`** — **`show()`**, then **[`applyPostShowFullscreenChrome`](../launcher/electron/window-lifecycle.cjs)** may call **`setFullScreen` / `setKiosk`** again (helps some Linux window managers; also reinforces kiosk on other platforms). When the shell is kiosk-locked, **`setFullScreenable(false)`** runs here as well.
 4. **DevTools** — optional when `ELECTRON_IS_DEV` and `ORANGETV_ELECTRON__OPEN_DEVTOOLS` (never in appliance profile). See [`environment.md`](environment.md).
 5. **Runtime** — blur/focus drives `orange-tv:shell-foreground` for renderer focus recovery.
 
@@ -44,9 +44,13 @@ sequenceDiagram
 
 `getShellWindowMode()` in [`shell-profile.cjs`](../launcher/electron/shell-profile.cjs) summarizes these flags for logging; **`getWindowChromeOptions`** remains the single source for **width/height/position/fullscreen/kiosk**.
 
+### OS-wide lock (not only Electron)
+
+Kiosk and appliance modes control **this shell window** (fullscreen, `setFullScreenable`, IPC rejection when leaving fullscreen). They do **not** implement a full **OS-wide** kiosk (for example blocking Alt+Tab). That requires **OS or deployment** configuration. See [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock*.
+
 ## Fullscreen toggles (debug / validation)
 
-- **F11** (main process): when **`ELECTRON_IS_DEV=1`** and profile is **not** appliance, registers a global shortcut to **toggle fullscreen** (`setFullScreen`). Useful on Linux VMs without changing renderer code.
+- **F11** (main process): when **`ELECTRON_IS_DEV=1`** and the shell is **not** kiosk-locked (not appliance and not **`ORANGETV_ELECTRON__KIOSK`**), registers a global shortcut to **toggle fullscreen** (`setFullScreen`). Useful on Linux VMs without changing renderer code.
 - **IPC** `orange-tv:window-set-fullscreen` with `{ fullscreen: boolean }`: exposed on **`window.orangeTv.setFullscreen`** from [`preload.cjs`](../launcher/electron/preload.cjs). Does not require React; useful from DevTools: `await window.orangeTv.setFullscreen(true)`.
 
 ## Troubleshooting
@@ -55,7 +59,7 @@ sequenceDiagram
 | --- | --- |
 | Blank window | Confirm Vite dev server URL (`VITE_DEV_SERVER_URL` or `http://127.0.0.1:5173`) or `npm run build` for `electron:prod`. |
 | Load error dialog | Stderr lines prefixed **`[OrangeTv:shell]`** — see [`electron-shell.md`](electron-shell.md). |
-| Fullscreen not filling display (Linux) | Try appliance/kiosk env; post-show fullscreen/kiosk on Linux is applied in [`window-lifecycle.cjs`](../launcher/electron/window-lifecycle.cjs). Some WMs need kiosk mode or compositor settings. |
+| Fullscreen not filling display (Linux) | Try appliance/kiosk env; post-show fullscreen/kiosk is applied in [`window-lifecycle.cjs`](../launcher/electron/window-lifecycle.cjs). Some WMs need kiosk mode or compositor settings. |
 | F11 does nothing | **GlobalShortcut** can fail if another app owns the accelerator; check logs for `F11 fullscreen shortcut not registered`. |
 
 ## Related

@@ -1,4 +1,5 @@
 import { launchAppTileIfActivated } from "@/launchFromTileActivate.ts";
+import { resetLaunchFeedbackStore, useLaunchFeedbackStore } from "@/store/launchFeedbackStore.ts";
 import { useFocusStore } from "@/store/focusStore.ts";
 import { resetFocusStore } from "@/test/resetFocusStore.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 describe("launchAppTileIfActivated", () => {
   beforeEach(() => {
     resetFocusStore();
+    resetLaunchFeedbackStore();
     vi.restoreAllMocks();
     delete (window as unknown as { orangeTv?: unknown }).orangeTv;
   });
@@ -52,6 +54,19 @@ describe("launchAppTileIfActivated", () => {
     await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" }, { onLaunchSucceeded });
 
     expect(onLaunchSucceeded).toHaveBeenCalledOnce();
+  });
+
+  it("records launch failure in feedback store when IPC returns ok false", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: false as const, reason: "app-not-found" }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+    vi.spyOn(useFocusStore.getState(), "requestShellFocusRestore").mockImplementation(() => {});
+
+    await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" });
+
+    expect(useLaunchFeedbackStore.getState().variant).toBe("error");
+    expect(useLaunchFeedbackStore.getState().line).toContain("app-not-found");
   });
 
   it("launches app-prefixed tiles", async () => {

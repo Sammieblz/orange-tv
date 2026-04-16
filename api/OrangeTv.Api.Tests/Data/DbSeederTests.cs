@@ -25,12 +25,18 @@ public sealed class DbSeederTests
             .OrderBy(a => a.SortOrder)
             .ThenBy(a => a.Id)
             .ToListAsync();
-        Assert.Equal(2, apps.Count);
+        Assert.Equal(6, apps.Count);
         Assert.Equal("launch-streaming-demo", apps[0].Id);
         Assert.Equal("Open streaming (Chrome)", apps[0].Label);
         Assert.Equal("chrome", apps[0].Type);
         Assert.Equal("launch-mpv-demo", apps[1].Id);
         Assert.Equal("Play sample (MPV)", apps[1].Label);
+
+        // Spot-check that real streaming shortcuts exist (ordering is deterministic by SortOrder then Id).
+        Assert.Contains(apps, a => a.Id == "netflix" && a.Type == "chrome");
+        Assert.Contains(apps, a => a.Id == "prime-video" && a.Type == "chrome");
+        Assert.Contains(apps, a => a.Id == "disney-plus" && a.Type == "chrome");
+        Assert.Contains(apps, a => a.Id == "youtube" && a.Type == "chrome");
     }
 
     [Fact]
@@ -48,7 +54,7 @@ public sealed class DbSeederTests
         await DbSeeder.SeedAsync(db);
         await DbSeeder.SeedAsync(db);
 
-        Assert.Equal(2, await db.Apps.CountAsync());
+        Assert.Equal(6, await db.Apps.CountAsync());
     }
 
     [Fact]

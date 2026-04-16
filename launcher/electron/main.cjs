@@ -9,6 +9,7 @@ const {
   validateWindowFullscreenPayload,
 } = require("./ipc-payload.cjs");
 const { postLaunch, postLaunchMedia } = require("./ipc-launch.cjs");
+const { resolveWindowSetFullscreenWhenKioskLocked } = require("./window-fullscreen-kiosk-guard.cjs");
 
 shellLogger.installMainProcessHandlers();
 shellLogger.installAppDiagnostics(app);
@@ -87,12 +88,43 @@ function registerIpcHandlers() {
       });
       return Promise.resolve({ ok: false, reason: parsed.reason });
     }
+    const kioskLock = resolveWindowSetFullscreenWhenKioskLocked(
+      shellProfile.isKioskLockedShell(),
+      parsed.fullscreen,
+    );
+    if (kioskLock.blocked) {
+      shellLogger.warn("window_set_fullscreen", {
+        event: "window_set_fullscreen",
+        ok: false,
+        reason: kioskLock.reason,
+      });
+      return Promise.resolve({ ok: false, reason: kioskLock.reason });
+    }
     mainWindow.setFullScreen(parsed.fullscreen);
     shellLogger.info("window_set_fullscreen", {
       event: "window_set_fullscreen",
       ok: true,
       fullscreen: parsed.fullscreen,
     });
+    return Promise.resolve({ ok: true });
+  });
+
+  ipcMain.handle(CHANNELS.SHELL_FOCUS, () => {
+    if (mainWindow === null || mainWindow.isDestroyed()) {
+      return Promise.resolve({ ok: false, reason: "no-window" });
+    }
+    try {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      shellLogger.warn("shell_focus", { event: "shell_focus", ok: false, message });
+      return Promise.resolve({ ok: false, reason: "focus-failed" });
+    }
+    shellLogger.info("shell_focus", { event: "shell_focus", ok: true });
     return Promise.resolve({ ok: true });
   });
 }

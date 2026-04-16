@@ -154,12 +154,15 @@ public sealed class ProcessLaunchService
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                 };
-                psi.ArgumentList.Add("--no-first-run");
-                psi.ArgumentList.Add("--no-default-browser-check");
-                psi.ArgumentList.Add("--disable-session-crashed-bubble");
-                psi.ArgumentList.Add($"--user-data-dir={userDataDir}");
-                psi.ArgumentList.Add("--new-window");
-                psi.ArgumentList.Add(url);
+                foreach (var arg in ChromeStreamingLaunchArguments.Build(
+                             url,
+                             userDataDir,
+                             _apiOptions.Value.Launch.ChromeStreamingUseAppWindow,
+                             _apiOptions.Value.Launch.ChromeStreamingStartFullscreen))
+                {
+                    psi.ArgumentList.Add(arg);
+                }
+
                 process = Process.Start(psi);
                 if (process is not null)
                 {

@@ -60,6 +60,17 @@ public sealed class LaunchOptions
     /// <c>launcher.chrome.profilesRoot</c> is unset. Set via <c>ORANGETV_API__Launch__ChromeProfilesRoot</c>.
     /// </summary>
     public string? ChromeProfilesRoot { get; set; }
+
+    /// <summary>
+    /// When true (default), streaming apps use Chromium <c>--app=&lt;url&gt;</c> (app shell, no tab strip).
+    /// Set false only to debug with a normal browser window (<c>--new-window</c>).
+    /// </summary>
+    public bool ChromeStreamingUseAppWindow { get; set; } = true;
+
+    /// <summary>
+    /// When true (default), adds <c>--start-fullscreen</c> for TV-style fullscreen. Set false for windowed app frames.
+    /// </summary>
+    public bool ChromeStreamingStartFullscreen { get; set; } = true;
 }
 
 public sealed class DataOptions

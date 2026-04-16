@@ -20,6 +20,11 @@ function isKioskFlag() {
   return readBool(process.env, "ORANGETV_ELECTRON__KIOSK");
 }
 
+/** Appliance or explicit kiosk: shell should stay fullscreen (no casual exit). */
+function isKioskLockedShell() {
+  return isApplianceProfile() || isKioskFlag();
+}
+
 function shouldOpenDevtools() {
   return (
     isDevElectron() &&
@@ -105,6 +110,7 @@ module.exports = {
   isDevElectron,
   isApplianceProfile,
   isKioskFlag,
+  isKioskLockedShell,
   shouldOpenDevtools,
   getShellWindowMode,
   getWindowChromeOptions,

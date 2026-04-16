@@ -34,6 +34,20 @@ export interface AppsListDto {
   items: AppDto[];
 }
 
+export interface ActiveLaunchSessionDto {
+  sessionId: string;
+  appId: string;
+  label: string;
+  pid: number;
+  startedAtUtc: string;
+  kind: string;
+  mediaItemId: string | null;
+}
+
+export interface ActiveLaunchSessionsDto {
+  items: ActiveLaunchSessionDto[];
+}
+
 export interface ContinueWatchingItemDto {
   mediaItemId: string;
   title: string;

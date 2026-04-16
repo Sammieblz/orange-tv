@@ -28,6 +28,8 @@ interface OrangeTvPreload {
   getRuntimeMetadata: () => Promise<OrangeTvRuntimeMetadataAppliance | OrangeTvRuntimeMetadataFull>;
   onShellForeground: (callback: () => void) => () => void;
   setFullscreen: (fullscreen: boolean) => Promise<{ ok: boolean; reason?: string }>;
+  /** Bring the Electron shell to the foreground (e.g. after minimizing a child app). */
+  focusShell: () => Promise<{ ok: boolean; reason?: string }>;
 }
 
 declare global {

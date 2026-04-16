@@ -16,3 +16,19 @@ export async function fetchJson<T>(path: string): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
+
+export async function postLaunchSessionAction(
+  path: string,
+): Promise<{ ok: boolean; reason?: string }> {
+  const base = getApiBaseUrl();
+  const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, { method: "POST" });
+  const body = (await res.json()) as { ok?: boolean; reason?: string };
+  if (res.status === 501) {
+    return { ok: false, reason: body.reason ?? "unsupported-platform" };
+  }
+  if (!res.ok && res.status !== 200) {
+    throw new Error(`Request failed ${res.status}`);
+  }
+  return { ok: body.ok === true, reason: body.reason };
+}

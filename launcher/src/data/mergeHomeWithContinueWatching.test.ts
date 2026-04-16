@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 
 describe("mergeHomeWithContinueWatching", () => {
   it("leaves home unchanged when items undefined (loading)", () => {
-    expect(mergeHomeWithContinueWatching(SEED_HOME, undefined)).toEqual(SEED_HOME);
+    expect(mergeHomeWithContinueWatching(SEED_HOME, undefined, "pending")).toEqual(SEED_HOME);
   });
 
   it("replaces continue row tiles when items is empty", () => {
-    const merged = mergeHomeWithContinueWatching(SEED_HOME, []);
+    const merged = mergeHomeWithContinueWatching(SEED_HOME, [], "success");
     const row = merged.rows.find((r) => r.id === "continue");
     expect(row?.tiles).toEqual([]);
     expect(merged.rows.find((r) => r.id === "launch-demos")?.tiles.length).toBe(
@@ -17,7 +17,9 @@ describe("mergeHomeWithContinueWatching", () => {
   });
 
   it("maps API items to media tile ids and progress", () => {
-    const merged = mergeHomeWithContinueWatching(SEED_HOME, [
+    const merged = mergeHomeWithContinueWatching(
+      SEED_HOME,
+      [
       {
         mediaItemId: "550e8400-e29b-41d4-a716-446655440000",
         title: "Test clip",
@@ -25,7 +27,9 @@ describe("mergeHomeWithContinueWatching", () => {
         progress: 0.42,
         lastPlayedAtUtc: "2026-01-01T00:00:00Z",
       },
-    ]);
+      ],
+      "success",
+    );
     const row = merged.rows.find((r) => r.id === "continue");
     expect(row?.tiles).toHaveLength(1);
     expect(row?.tiles[0]).toMatchObject({

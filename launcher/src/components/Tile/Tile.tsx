@@ -6,9 +6,11 @@ import styles from "./Tile.module.css";
 interface TileProps {
   tile: TileDescriptor;
   focused: boolean;
+  /** Mouse / touch: same as keyboard Enter on this tile (focus + launch). */
+  onPointerActivate?: () => void;
 }
 
-export function Tile({ tile, focused }: TileProps) {
+export function Tile({ tile, focused, onPointerActivate }: TileProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const disabled = tile.disabled === true;
   const showProgress = !disabled && tile.progress != null && tile.progress > 0 && tile.progress < 1;
@@ -41,6 +43,14 @@ export function Tile({ tile, focused }: TileProps) {
       aria-disabled={disabled}
       aria-label={tile.title}
       style={{ transformOrigin: "center center" }}
+      onClick={
+        disabled || !onPointerActivate
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              onPointerActivate();
+            }
+      }
     >
       <div
         className={styles.art}

@@ -58,6 +58,9 @@ export function stubApiFetchSuccess() {
         ],
       });
     }
+    if (url.includes("/api/v1/launch/sessions/active")) {
+      return Response.json({ items: [] });
+    }
     if (url.includes("/api/v1/apps")) {
       const now = new Date().toISOString();
       return Response.json({

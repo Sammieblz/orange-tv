@@ -25,3 +25,16 @@
 .detail {
   max-width: 100%;
 }
+
+.launchLine {
+  max-width: 100%;
+  font-weight: 500;
+}
+
+.launchLineSuccess {
+  color: var(--color-muted);
+}
+
+.launchLineError {
+  color: #f87171;
+}

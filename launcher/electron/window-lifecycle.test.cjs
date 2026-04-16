@@ -28,7 +28,7 @@ function withPlatform(platform, fn) {
 }
 
 describe("applyPostShowFullscreenChrome", () => {
-  it("no-ops when platform is not linux", () => {
+  it("applies fullscreen and kiosk on win32 when options are true", () => {
     withPlatform("win32", () => {
       const calls = [];
       const win = {
@@ -36,7 +36,10 @@ describe("applyPostShowFullscreenChrome", () => {
         setKiosk: (v) => calls.push(["setKiosk", v]),
       };
       applyPostShowFullscreenChrome(win, { fullscreen: true, kiosk: true });
-      assert.deepStrictEqual(calls, []);
+      assert.deepStrictEqual(calls, [
+        ["setFullScreen", true],
+        ["setKiosk", true],
+      ]);
     });
   });
 
@@ -73,6 +76,7 @@ describe("registerDevFullscreenShortcut", () => {
     const shellProfile = {
       isDevElectron: () => false,
       isApplianceProfile: () => false,
+      isKioskLockedShell: () => false,
     };
     const shellLogger = { info: () => {}, warn: () => {} };
     const win = { isDestroyed: () => false, setFullScreen: () => {}, isFullScreen: () => false };
@@ -85,6 +89,7 @@ describe("registerDevFullscreenShortcut", () => {
     const shellProfile = {
       isDevElectron: () => true,
       isApplianceProfile: () => true,
+      isKioskLockedShell: () => true,
     };
     const shellLogger = { info: () => {}, warn: () => {} };
     const win = { isDestroyed: () => false };

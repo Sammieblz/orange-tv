@@ -51,23 +51,7 @@ export const SEED_HOME: HomeScreenData = {
     {
       id: "continue",
       title: "Continue watching",
-      tiles: [
-        {
-          id: "cw-1",
-          title: "Episode 3 — The long night",
-          progress: 0.62,
-        },
-        {
-          id: "cw-2",
-          title: "Concert — Live in Berlin",
-          progress: 0.12,
-        },
-        {
-          id: "cw-3",
-          title: "Indie spotlight",
-          progress: 0.95,
-        },
-      ],
+      tiles: [{ id: "continue-loading", title: "Loading…", disabled: true }],
     },
     {
       id: "recent",
@@ -104,25 +88,12 @@ export const SEED_HOME: HomeScreenData = {
     {
       id: "streaming",
       title: "Streaming",
-      tiles: [
-        { id: "app-tv", title: "Apple TV" },
-        { id: "app-nf", title: "Netflix" },
-        {
-          id: "app-dis",
-          title: "Unavailable",
-          disabled: true,
-        },
-        { id: "app-pr", title: "Prime Video" },
-      ],
+      tiles: [{ id: "streaming-loading", title: "Loading…", disabled: true }],
     },
     {
       id: "games",
       title: "Games",
-      tiles: [
-        { id: "g-1", title: "Hollow Knight" },
-        { id: "g-2", title: "Celeste" },
-        { id: "g-3", title: "RetroArch" },
-      ],
+      tiles: [{ id: "games-coming-soon", title: "Coming soon", disabled: true }],
     },
   ],
 };

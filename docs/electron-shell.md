@@ -16,7 +16,8 @@ The TV launcher can run inside **Electron** (`launcher/electron/`). The **main**
 | **`launchRequest(payload)`** | `orange-tv:launch-request` | Validates `payload` in main (`kind` must be **`app`**, **`id`** required — seeded app id). Forwards **`POST /api/v1/launch`** to the local API (see **`ORANGETV_ELECTRON__API_BASE_URL`** in [`environment.md`](environment.md)); returns **`{ ok, sessionId?, pid? }`** or **`{ ok: false, reason }`**. |
 | **`getRuntimeMetadata()`** | _(sync in preload)_ | **Appliance** profile: minimal object (`shellProfile`, `channel`). **Dev** / default: includes engine versions; **non-dev** production omits raw **Node** version. |
 | **`onShellForeground(cb)`** | `orange-tv:shell-foreground` (main **sends** after window was blurred then focused again) | Subscribe for focus-recovery when returning from an external app; returns unsubscribe. |
-| **`setFullscreen(fullscreen)`** | `orange-tv:window-set-fullscreen` | **Main window only:** sets fullscreen on the shell `BrowserWindow` (window chrome only). |
+| **`setFullscreen(fullscreen)`** | `orange-tv:window-set-fullscreen` | **Main window only:** sets fullscreen on the shell `BrowserWindow`. In **appliance** or **`ORANGETV_ELECTRON__KIOSK`** mode, requests that would **leave** fullscreen are rejected (`kiosk-fullscreen-locked`). |
+| **`focusShell()`** | `orange-tv:shell-focus` | Restores (if minimized), **shows**, and **focuses** the launcher window — use after **`POST /api/v1/launch/sessions/{id}/minimize`** so focus returns from Chrome/MPV. |
 
 Invoke-style channels are registered in main; **`SHELL_FOREGROUND`** is **push-only** from main to renderer. All names live in [`launcher/electron/ipc-contract.cjs`](../launcher/electron/ipc-contract.cjs).
 
@@ -37,6 +38,14 @@ If **`loadURL`** / **`loadFile`** fails, the user sees an **error dialog** and t
 ## Environment
 
 See **[`environment.md`](environment.md)** → *Electron shell (main process)* and [`.env.example`](../.env.example) (export vars from your shell when launching Electron).
+
+## OS-wide lock vs shell lock
+
+**True OS-wide lock** (for example, preventing Alt+Tab or other OS shortcuts from leaving the TV experience) is **not** something Electron alone guarantees. That is an **OS or appliance image** concern: kiosk Linux, Windows assigned access, dedicated hardware remotes, etc. The Orange TV shell can lock **its own** fullscreen/kiosk behavior (see preload `setFullscreen` and [`environment.md`](environment.md)); it does not replace OS-level kiosk policy.
+
+## External apps and the launch-session API
+
+Minimize and foreground for Chrome/MPV are implemented via **platform window APIs** in the .NET host. On **Windows**, those endpoints drive Win32 for the child PID. On **Linux and macOS**, **`POST /api/v1/launch/sessions/{id}/minimize`** and **`.../foreground`** return **501 Not Implemented** until a non-Windows backend exists. **`GET /api/v1/launch/sessions/active`** still lists active sessions from the database so the launcher dock can show what is running. See [`environment.md`](environment.md) → *Local API*.
 
 ## Related docs
 

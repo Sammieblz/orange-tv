@@ -6,6 +6,7 @@ const { CHANNELS } = require("./ipc-contract.cjs");
 
 /** @type {readonly string[]} Sorted for stable assertions in tests. */
 const ORANGE_TV_BRIDGE_KEYS = Object.freeze([
+  "focusShell",
   "getRuntimeMetadata",
   "launchRequest",
   "onShellForeground",
@@ -38,6 +39,8 @@ function createOrangeTvBridge(ipcRenderer, shellProfile) {
 
     setFullscreen: (fullscreen) =>
       ipcRenderer.invoke(CHANNELS.WINDOW_SET_FULLSCREEN, { fullscreen }),
+
+    focusShell: () => ipcRenderer.invoke(CHANNELS.SHELL_FOCUS),
   };
 }
 
