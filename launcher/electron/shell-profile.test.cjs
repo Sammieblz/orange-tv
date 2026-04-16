@@ -65,6 +65,20 @@ describe("getShellWindowMode", () => {
   });
 });
 
+describe("isKioskLockedShell", () => {
+  it("is true for appliance or kiosk flag", () => {
+    withEnv({ ORANGETV_ELECTRON__SHELL_PROFILE: "appliance" }, (sp) => {
+      assert.strictEqual(sp.isKioskLockedShell(), true);
+    });
+    withEnv({ ORANGETV_ELECTRON__KIOSK: "1" }, (sp) => {
+      assert.strictEqual(sp.isKioskLockedShell(), true);
+    });
+    withEnv({}, (sp) => {
+      assert.strictEqual(sp.isKioskLockedShell(), false);
+    });
+  });
+});
+
 describe("getWindowChromeOptions", () => {
   const workArea = { width: 1920, height: 1080, x: 0, y: 0 };
 

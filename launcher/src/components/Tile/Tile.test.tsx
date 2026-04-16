@@ -1,7 +1,8 @@
 import { Tile } from "@/components/Tile/Tile.tsx";
 import type { TileDescriptor } from "@/data/seedHome.ts";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Tile", () => {
   it("renders caption and placeholder when no image", () => {
@@ -21,5 +22,14 @@ describe("Tile", () => {
     const tile: TileDescriptor = { id: "p", title: "P", progress: 0.5 };
     const { container } = render(<Tile tile={tile} focused={false} />);
     expect(container.querySelector('[aria-hidden="true"]')).toBeTruthy();
+  });
+
+  it("invokes onPointerActivate when clicked", async () => {
+    const user = userEvent.setup();
+    const onPointerActivate = vi.fn();
+    const tile: TileDescriptor = { id: "click-me", title: "Click" };
+    render(<Tile tile={tile} focused={false} onPointerActivate={onPointerActivate} />);
+    await user.click(screen.getByRole("button", { name: "Click" }));
+    expect(onPointerActivate).toHaveBeenCalledOnce();
   });
 });

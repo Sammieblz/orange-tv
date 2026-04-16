@@ -4,8 +4,8 @@ import { SEED_HOME } from "@/data/seedHome.ts";
 import { describe, expect, it } from "vitest";
 
 describe("mergeHomeWithRecommendations", () => {
-  it("leaves home unchanged when feed undefined", () => {
-    expect(mergeHomeWithRecommendations(SEED_HOME, undefined)).toEqual(SEED_HOME);
+  it("leaves home unchanged when feed undefined and still pending", () => {
+    expect(mergeHomeWithRecommendations(SEED_HOME, undefined, "pending")).toEqual(SEED_HOME);
   });
 
   it("replaces recommendation row tiles from API", () => {
@@ -58,7 +58,7 @@ describe("mergeHomeWithRecommendations", () => {
       ],
     };
 
-    const merged = mergeHomeWithRecommendations(SEED_HOME, feed);
+    const merged = mergeHomeWithRecommendations(SEED_HOME, feed, "success");
     const recent = merged.rows.find((r) => r.id === "recent");
     expect(recent?.tiles[0]).toMatchObject({
       id: "media:550e8400-e29b-41d4-a716-446655440000",
@@ -69,6 +69,9 @@ describe("mergeHomeWithRecommendations", () => {
       id: "app:launch-streaming-demo",
       title: "Chrome",
     });
-    expect(merged.rows.find((r) => r.id === "picks")?.tiles).toEqual([]);
+    expect(merged.rows.find((r) => r.id === "picks")?.tiles[0]).toMatchObject({
+      id: "recommendations-empty",
+      disabled: true,
+    });
   });
 });

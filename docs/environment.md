@@ -49,12 +49,12 @@ These are read by **`launcher/electron/main.cjs`** and **`launcher/electron/prel
 | Variable | Purpose |
 | --- | --- |
 | **`ELECTRON_IS_DEV`** | Set to **`1`** by **`npm run electron`** (dev URL load). Unset for **`electron:prod`** (`dist/index.html`). |
-| **`ORANGETV_ELECTRON__SHELL_PROFILE`** | **`appliance`**: fullscreen shell, minimal metadata exposed to renderer via preload. Omit / other: windowed (dev-sized) or centered window for production builds on desktop. |
-| **`ORANGETV_ELECTRON__KIOSK`** | **`1`** / **`true`**: enable Electron **`kiosk`** (stricter than fullscreen alone). |
+| **`ORANGETV_ELECTRON__SHELL_PROFILE`** | **`appliance`**: fullscreen shell, minimal metadata exposed to renderer via preload. Omit / other: windowed (dev-sized) or centered window for production builds on desktop. Appliance (or **`ORANGETV_ELECTRON__KIOSK`**) also **locks** the shell: **`setFullScreenable(false)`**, renderer cannot turn fullscreen **off** via IPC, and the dev **F11** shortcut is disabled. |
+| **`ORANGETV_ELECTRON__KIOSK`** | **`1`** / **`true`**: enable Electron **`kiosk`** (stricter than fullscreen alone) and treat the shell as **kiosk-locked** (same IPC / F11 behavior as appliance for locking). |
 | **`ORANGETV_ELECTRON__OPEN_DEVTOOLS`** | **`1`** / **`true`**: open DevTools when **`ELECTRON_IS_DEV`** is set and profile is **not** appliance. |
 | **`ORANGETV_ELECTRON__API_BASE_URL`** | Base URL for the local .NET API (no trailing slash). Main uses this for **`POST /api/v1/launch`** when the renderer calls **`window.orangeTv.launchRequest`**. Defaults to **`http://localhost:5144`** when unset. |
 
-**Fullscreen toggles (not env vars):** In dev (non-appliance), the main process registers **F11** to toggle fullscreen. The preload API **`window.orangeTv.setFullscreen(boolean)`** invokes **`orange-tv:window-set-fullscreen`**. See [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
+**Fullscreen toggles (not env vars):** In dev, when the shell is **not** kiosk-locked, the main process registers **F11** to toggle fullscreen. The preload API **`window.orangeTv.setFullscreen(boolean)`** invokes **`orange-tv:window-set-fullscreen`**. See [`electron-window-lifecycle.md`](electron-window-lifecycle.md).
 
 **Shell logs:** main-process diagnostics use the prefix **`[OrangeTv:shell]`** on **stderr** (load failures, render-process-gone, unhandled errors). See [`electron-shell.md`](electron-shell.md).
 
@@ -81,6 +81,15 @@ With the API running (default `http://localhost:5144`), baseline endpoints inclu
 - `GET /api/v1/media/items` — paginated indexed local files (`skip` / `take`).
 - `POST /api/v1/media/library/scan` — trigger asynchronous full library rescan (`202 Accepted`).
 - `POST /api/v1/launch` — JSON `{ "appId": "<id>" }` to spawn Chrome or MPV (see seeded apps in `api/Data/DbSeeder.cs`).
+- `GET /api/v1/launch/sessions/active` — active child sessions (not ended) with app labels for the launcher dock.
+- `POST /api/v1/launch/sessions/{sessionId}/minimize` / `.../foreground` — Windows: Win32 window minimize / restore+focus for the session PID; other OS: **501** until a platform backend exists.
+
+Deep dive: [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md).
+
+**Notes (launcher dock and session APIs):**
+
+- **OS-wide lock:** True OS-wide lock (for example, no Alt+Tab) is **not** what Electron alone guarantees; that is an **OS / appliance image** concern (kiosk Linux, assigned access, etc.). See [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock*.
+- **Linux / macOS minimize & foreground:** Those endpoints return **501** until a non-Windows implementation exists; the dock can still list **active sessions** from **`GET /api/v1/launch/sessions/active`** (data from the API).
 
 **Chrome profiles:** the **`launcher.chrome.profilesRoot`** setting (via **`PUT /api/v1/settings/launcher.chrome.profilesRoot`**) overrides the env default for where profile segment folders live. Backup and DB-vs-profile confusion are documented in [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md).
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrangeTv.Api.Data;
 using OrangeTv.Api.Data.Entities;
+using OrangeTv.Api.Platform;
 using OrangeTv.Api.Services;
 
 namespace OrangeTv.Api.Endpoints;
@@ -17,6 +18,9 @@ public static class ApiV1Endpoints
 
         return Enum.TryParse(value.Trim(), ignoreCase: true, out freshness);
     }
+
+    private static string LaunchKind(string? type) =>
+        string.IsNullOrWhiteSpace(type) ? "unknown" : type.Trim().ToLowerInvariant();
 
     public static void MapApiV1Endpoints(this WebApplication app)
     {
@@ -109,6 +113,25 @@ public static class ApiV1Endpoints
             .WithName("GetApps")
             .WithTags("apps");
 
+        app.MapGet(
+                "/api/v1/home",
+                () =>
+                {
+                    HomeRowLayout[] rows =
+                    [
+                        new("continue", "Continue watching", ["GET /api/v1/watch/continue"]),
+                        new("recent", "Recent", ["GET /api/v1/recommendations/home (rows[].rowId=recent)"]),
+                        new("top-apps", "Top apps", ["GET /api/v1/recommendations/home (rows[].rowId=top-apps)"]),
+                        new("picks", "Picks for you", ["GET /api/v1/recommendations/home (rows[].rowId=picks)"]),
+                        new("launch-demos", "Launch demos", ["static shell tiles", "POST /api/v1/launch"]),
+                        new("streaming", "Streaming", ["GET /api/v1/apps", "POST /api/v1/launch"]),
+                        new("games", "Games", ["placeholder"]),
+                    ];
+                    return Results.Ok(new HomeLayoutResponse("home-v1", rows));
+                })
+            .WithName("GetHomeLayout")
+            .WithTags("home");
+
         app.MapPut(
                 "/api/v1/apps/{appId}/session-freshness",
                 async (
@@ -189,6 +212,98 @@ public static class ApiV1Endpoints
             .WithName("PostLaunchMedia")
             .WithTags("launch");
 
+        app.MapGet(
+                "/api/v1/launch/sessions/active",
+                async (OrangeTvDbContext db, CancellationToken cancellationToken) =>
+                {
+                    var rows = await (
+                            from s in db.LaunchSessions.AsNoTracking()
+                            join a in db.Apps.AsNoTracking() on s.AppId equals a.Id
+                            where s.EndedAtUtc == null
+                            orderby s.StartedAtUtc
+                            select new ActiveLaunchSessionItem(
+                                s.Id,
+                                s.AppId,
+                                a.Label,
+                                s.Pid,
+                                s.StartedAtUtc,
+                                LaunchKind(a.Type),
+                                s.MediaItemId))
+                        .ToListAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    return Results.Ok(new ActiveLaunchSessionsResponse(rows.ToArray()));
+                })
+            .WithName("GetActiveLaunchSessions")
+            .WithTags("launch");
+
+        app.MapPost(
+                "/api/v1/launch/sessions/{sessionId:guid}/minimize",
+                async (
+                    Guid sessionId,
+                    OrangeTvDbContext db,
+                    IChildProcessWindowOrchestrator orchestrator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var session = await db.LaunchSessions.AsNoTracking()
+                        .FirstOrDefaultAsync(s => s.Id == sessionId && s.EndedAtUtc == null, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (session is null)
+                    {
+                        return Results.NotFound(new { error = "session-not-found" });
+                    }
+
+                    var result = await orchestrator.MinimizeAsync(session.Pid, cancellationToken).ConfigureAwait(false);
+                    if (result.Reason == "unsupported-platform")
+                    {
+                        return Results.Json(
+                            new { ok = false, reason = result.Reason },
+                            statusCode: StatusCodes.Status501NotImplemented);
+                    }
+
+                    if (!result.Ok)
+                    {
+                        return Results.Ok(new { ok = false, reason = result.Reason ?? "minimize-failed" });
+                    }
+
+                    return Results.Ok(new { ok = true });
+                })
+            .WithName("PostLaunchSessionMinimize")
+            .WithTags("launch");
+
+        app.MapPost(
+                "/api/v1/launch/sessions/{sessionId:guid}/foreground",
+                async (
+                    Guid sessionId,
+                    OrangeTvDbContext db,
+                    IChildProcessWindowOrchestrator orchestrator,
+                    CancellationToken cancellationToken) =>
+                {
+                    var session = await db.LaunchSessions.AsNoTracking()
+                        .FirstOrDefaultAsync(s => s.Id == sessionId && s.EndedAtUtc == null, cancellationToken)
+                        .ConfigureAwait(false);
+                    if (session is null)
+                    {
+                        return Results.NotFound(new { error = "session-not-found" });
+                    }
+
+                    var result = await orchestrator.ForegroundAsync(session.Pid, cancellationToken).ConfigureAwait(false);
+                    if (result.Reason == "unsupported-platform")
+                    {
+                        return Results.Json(
+                            new { ok = false, reason = result.Reason },
+                            statusCode: StatusCodes.Status501NotImplemented);
+                    }
+
+                    if (!result.Ok)
+                    {
+                        return Results.Ok(new { ok = false, reason = result.Reason ?? "foreground-failed" });
+                    }
+
+                    return Results.Ok(new { ok = true });
+                })
+            .WithName("PostLaunchSessionForeground")
+            .WithTags("launch");
+
         app.MapMediaEndpoints();
         app.MapWatchEndpoints();
         app.MapRecommendationEndpoints();
@@ -222,4 +337,19 @@ public static class ApiV1Endpoints
     private sealed record PutAppSessionFreshnessRequest(string? Freshness);
 
     private sealed record AppSessionFreshnessResponse(string Id, string SessionFreshness, DateTime UpdatedAtUtc);
+
+    private sealed record HomeLayoutResponse(string Version, HomeRowLayout[] Rows);
+
+    private sealed record HomeRowLayout(string Id, string Title, string[] DataSources);
+
+    private sealed record ActiveLaunchSessionsResponse(ActiveLaunchSessionItem[] Items);
+
+    private sealed record ActiveLaunchSessionItem(
+        Guid SessionId,
+        string AppId,
+        string Label,
+        int Pid,
+        DateTime StartedAtUtc,
+        string Kind,
+        Guid? MediaItemId);
 }

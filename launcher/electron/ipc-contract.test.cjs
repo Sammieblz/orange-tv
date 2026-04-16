@@ -12,6 +12,7 @@ describe("CHANNELS", () => {
     assert.strictEqual(CHANNELS.LAUNCH_REQUEST, "orange-tv:launch-request");
     assert.strictEqual(CHANNELS.SHELL_FOREGROUND, "orange-tv:shell-foreground");
     assert.strictEqual(CHANNELS.WINDOW_SET_FULLSCREEN, "orange-tv:window-set-fullscreen");
+    assert.strictEqual(CHANNELS.SHELL_FOCUS, "orange-tv:shell-focus");
   });
 
   it("uses unique values", () => {
@@ -26,6 +27,7 @@ describe("RENDERER_INVOKE_CHANNELS", () => {
       CHANNELS.PING,
       CHANNELS.LAUNCH_REQUEST,
       CHANNELS.WINDOW_SET_FULLSCREEN,
+      CHANNELS.SHELL_FOCUS,
     ]);
   });
 });

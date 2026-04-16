@@ -54,17 +54,27 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
 
 ### Fullscreen / kiosk (best effort in VM)
 
-- [ ] Launcher can enter **fullscreen** (browser F11 or app fullscreen when Electron exists).
-- [ ] No obvious **desktop chrome** required for basic navigation (N/A until Electron/kiosk shell exists).
+- [ ] Launcher can enter **fullscreen** (browser F11, or Electron when using `npm run dev:electron` with appliance/kiosk env — see [`electron-window-lifecycle.md`](electron-window-lifecycle.md)).
+- [ ] With **Electron**, optional smoke: set `ORANGETV_ELECTRON__SHELL_PROFILE=appliance` or `ORANGETV_ELECTRON__KIOSK=true` and confirm the shell stays in a locked fullscreen/kiosk mode per [`electron-shell.md`](electron-shell.md) (no casual exit via renderer IPC).
 
 **VM limitation:** Real appliance behavior (labwc, auto-login, no sleep) is **not** fully represented in a typical dev VM. See [Known limitations](#known-limitations-vm-vs-hardware).
+
+### Launch sessions API and running apps dock
+
+- [ ] `GET /api/v1/launch/sessions/active` returns **HTTP 200** and JSON with an **`items`** array (may be empty).
+
+  ```bash
+  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5144/api/v1/launch/sessions/active
+  ```
+
+- [ ] After launching an external app from the launcher, **`items`** includes that session (or verify via API after `POST /api/v1/launch`).
+- [ ] **Linux (expected):** `POST /api/v1/launch/sessions/{sessionId}/minimize` returns **501** — this is **expected** until a Linux window backend exists; it is **not** a regression. The dock may still list active sessions.
+- [ ] Launcher UI shows the **Running apps** strip with operator notes (OS lock vs shell lock; Linux minimize limitations) when sessions exist or after load.
 
 ### Process launch (Chrome / MPV / RetroArch)
 
 - [ ] From Orange TV, launching the configured **external app** starts a process (log or `ps` confirms).
 - [ ] Launch uses **Linux-appropriate** paths and arguments (no Windows-only assumptions in API or scripts).
-
-**N/A** until launch orchestration is wired end-to-end.
 
 ### Process recovery / return home
 
@@ -77,8 +87,6 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
 
 - [ ] Change a **documented** setting (or env-driven flag) and restart API + launcher; value **persists** on disk under Linux paths.
 - [ ] SQLite or config files live under paths documented for Linux (see `docs/environment.md`).
-
-**N/A** until persistence feature exists.
 
 ### Playback (local media)
 

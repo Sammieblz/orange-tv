@@ -1,16 +1,12 @@
 const { BrowserWindow, globalShortcut } = require("electron");
 
 /**
- * On some Linux window managers, reinforcing fullscreen/kiosk after `show()` matches the work area more reliably
- * than constructor flags alone.
+ * Reinforce fullscreen/kiosk after `show()` so the work area matches reliably (Linux WMs, Windows kiosk, etc.).
  *
  * @param {import('electron').BrowserWindow} win
  * @param {{ fullscreen?: boolean; kiosk?: boolean }} chromeOpts
  */
 function applyPostShowFullscreenChrome(win, chromeOpts) {
-  if (process.platform !== "linux") {
-    return;
-  }
   if (chromeOpts.fullscreen) {
     win.setFullScreen(true);
   }
@@ -74,6 +70,13 @@ function createMainWindow(deps) {
   win.once("ready-to-show", () => {
     win.show();
     applyPostShowFullscreenChrome(win, chromeOpts);
+    if (shellProfile.isKioskLockedShell() && !win.isDestroyed()) {
+      try {
+        win.setFullScreenable(false);
+      } catch {
+        // best-effort; some platforms may not support
+      }
+    }
     if (shellProfile.shouldOpenDevtools()) {
       win.webContents.openDevTools({ mode: "detach" });
     }
@@ -112,7 +115,7 @@ function createMainWindow(deps) {
  * @returns {() => void} unregister
  */
 function registerDevFullscreenShortcut(win, shellProfile, shellLogger) {
-  if (!shellProfile.isDevElectron() || shellProfile.isApplianceProfile()) {
+  if (!shellProfile.isDevElectron() || shellProfile.isKioskLockedShell()) {
     return () => {};
   }
 

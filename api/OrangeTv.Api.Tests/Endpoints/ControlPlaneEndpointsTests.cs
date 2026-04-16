@@ -58,6 +58,22 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
     }
 
     [Fact]
+    public async Task GetHome_returns_row_layout_contract()
+    {
+        var response = await _client.GetAsync("/api/v1/home");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<HomeLayoutResponse>(_jsonOptions, CancellationToken.None);
+        Assert.NotNull(payload);
+        Assert.Equal("home-v1", payload.Version);
+        Assert.NotNull(payload.Rows);
+        Assert.Equal(7, payload.Rows.Length);
+        Assert.Contains(payload.Rows, r => r.Id == "continue");
+        Assert.Contains(payload.Rows, r => r.Id == "streaming");
+        Assert.All(payload.Rows, r => Assert.NotEmpty(r.DataSources));
+    }
+
+    [Fact]
     public async Task GetApps_returns_seed_rows()
     {
         var response = await _client.GetAsync("/api/v1/apps");
@@ -66,10 +82,14 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
         var payload = await response.Content.ReadFromJsonAsync<AppsListResponse>(_jsonOptions, CancellationToken.None);
         Assert.NotNull(payload);
         Assert.NotNull(payload.Items);
-        Assert.Equal(3, payload.Items.Length);
+        Assert.Equal(7, payload.Items.Length);
         Assert.Equal("launch-streaming-demo", payload.Items[0].Id);
         Assert.Equal("launch-mpv-demo", payload.Items[1].Id);
-        Assert.Equal(LocalMediaAppConstants.AppId, payload.Items[2].Id);
+        Assert.Equal("netflix", payload.Items[2].Id);
+        Assert.Equal("prime-video", payload.Items[3].Id);
+        Assert.Equal("disney-plus", payload.Items[4].Id);
+        Assert.Equal("youtube", payload.Items[5].Id);
+        Assert.Equal(LocalMediaAppConstants.AppId, payload.Items[6].Id);
         Assert.NotNull(payload.Items[0].SessionFreshness);
     }
 
@@ -237,6 +257,10 @@ public sealed class ControlPlaneEndpointsTests : IClassFixture<ApiWebApplication
     private sealed record SettingsListResponse(SettingItemResponse[] Items);
 
     private sealed record SettingItemResponse(string Key, string? Value, DateTime UpdatedAtUtc);
+
+    private sealed record HomeLayoutResponse(string Version, HomeRowLayout[] Rows);
+
+    private sealed record HomeRowLayout(string Id, string Title, string[] DataSources);
 
     private sealed record AppsListResponse(AppItemResponse[] Items);
 

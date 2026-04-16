@@ -30,6 +30,17 @@ This update reincorporates implementation-level detail for the frontend, local h
 
 Orange TV should be marketed as a premium launcher and local-first media appliance with strong session persistence and polished TV ergonomics — not as a guaranteed high-fidelity Linux replacement for dedicated commercial streaming boxes.
 
+## MVP baseline (shipped in repo)
+
+The following capabilities are implemented in the current codebase and form the **MVP baseline** for further appliance work. Detailed behavior and HTTP contracts: [`docs/launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md), [`docs/electron-shell.md`](electron-shell.md), [`docs/environment.md`](environment.md).
+
+- **Electron shell lock:** Appliance / `ORANGETV_ELECTRON__KIOSK` kiosk-locked fullscreen (`setFullScreenable(false)`), renderer cannot leave fullscreen via IPC when locked, dev **F11** disabled when kiosk-locked; **`orange-tv:shell-focus`** to focus the shell after minimizing external apps.
+- **Launch sessions:** SQLite `launch_sessions` rows per spawn; **`GET /api/v1/launch/sessions/active`** lists active sessions with app labels.
+- **OS window control:** **`POST .../minimize`** and **`POST .../foreground`** — **Win32** implementation on Windows; **501** on Linux/macOS until a non-Windows orchestrator exists.
+- **Launcher:** **Running apps** dock (minimize/switch + operator notes), TanStack Query polling / invalidation on launch success.
+
+Validation: [`docs/linux-smoke-checklist.md`](linux-smoke-checklist.md), [`docs/testing-matrix-v1.md`](testing-matrix-v1.md).
+
 ## Section 1 — Product definition and planning principles
 
 The project centers on one clean end-state: an appliance that feels fast, intentional, and resilient from the moment the TV turns on. Every architecture choice should support appliance behavior first and feature breadth second.

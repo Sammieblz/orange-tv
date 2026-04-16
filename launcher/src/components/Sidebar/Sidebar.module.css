@@ -20,14 +20,19 @@
   gap: 8px;
 }
 
-.item,
-.itemActive,
-.itemFocused {
+.itemButton {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  margin: 0;
   padding: 12px 10px;
+  border: none;
   border-radius: var(--radius-card);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   color: var(--color-muted);
   transition:
     color var(--transition-fast),
@@ -35,9 +40,15 @@
     box-shadow var(--transition-fast);
 }
 
-.rail:not(.railExpanded) .item,
-.rail:not(.railExpanded) .itemActive,
-.rail:not(.railExpanded) .itemFocused {
+.itemButton:focus {
+  outline: none;
+}
+
+.itemButton:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.rail:not(.railExpanded) .itemButton {
   justify-content: center;
   padding-inline: 8px;
 }

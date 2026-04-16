@@ -8,13 +8,26 @@
 
 **What it is not:** a cloud media service, a credential vault, or a web-automation product. Streaming through Chrome is a **best-effort convenience** on Linux; **local media and launcher quality** are the premium pillars. See the strategic note in the plan below.
 
-At a glance: **Electron** shell (narrow preload IPC) + **React** TV UI + **ASP.NET Core Minimal API** on **.NET 10 LTS** with **SQLite**, **background workers**, and (on the target image) **Ubuntu 24.04 LTS** + **Wayland** + **labwc** for the appliance session.
+At a glance: **Electron** shell (narrow preload IPC) + **React** TV UI + **ASP.NET Core Minimal API** (see `api/*.csproj` for the current **target framework**, e.g. **.NET 9**) with **SQLite**, **background workers**, and (on the target image) **Ubuntu 24.04 LTS** + **Wayland** + **labwc** for the appliance session.
+
+## Documentation index
+
+Structured table of contents for all guides:
+
+- **[`docs/README.md`](docs/README.md)** — index of setup, API, Electron, validation, and feature docs
+
+Highlights:
+
+- **Shell / IPC / kiosk:** [`docs/electron-shell.md`](docs/electron-shell.md), [`docs/electron-window-lifecycle.md`](docs/electron-window-lifecycle.md)
+- **Environment and HTTP API surface:** [`docs/environment.md`](docs/environment.md)
+- **Launch sessions and OS window control:** [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md)
+- **Sprint validation (Linux):** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix:** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
 
 ## Full-scope plan (v1.2)
 
 The canonical in-repo write-up (architecture, OS/session baseline, operations, data model, delivery sequencing, risks) is:
 
-- [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md)
+- [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md) (includes **MVP baseline (shipped)** status)
 
 ## Config, lint/format, and env conventions
 
@@ -22,6 +35,7 @@ The canonical in-repo write-up (architecture, OS/session baseline, operations, d
 - **Frontend lint/format** (`launcher/`):
   - `npm --prefix launcher run lint`
   - `npm --prefix launcher run format:check`
+- **Tests (repo root):** `npm run test` runs **.NET** only; `npm run test:all` runs **Vitest + Electron `node:test` + `dotnet test`**; `npm run verify` runs **launcher lint** then **`test:all`**. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Environment variables**:
   - Examples: `.env.example`
   - Documentation: `docs/environment.md`
@@ -83,6 +97,7 @@ Responsible for:
 - Focus-based navigation
 - Keyboard and gamepad input handling
 - Rendering launcher data from the local API
+- **Running apps dock:** polls active launch sessions and calls minimize/foreground APIs (see [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md))
 
 ### 3. Local .NET service
 
@@ -91,6 +106,8 @@ Responsible for:
 - Apps/settings/history APIs
 - SQLite persistence
 - Launch orchestration for Chrome and MPV
+- **Launch sessions** (`launch_sessions` table): one row per spawned child process; **`GET /api/v1/launch/sessions/active`** lists sessions that have not ended (joined to `apps` for labels). End-of-session is handled when the child exits (see `ProcessLaunchService`).
+- **Child window orchestration (optional minimize/foreground):** on **Windows**, `POST /api/v1/launch/sessions/{id}/minimize` and `.../foreground` use Win32 for the session PID; on **Linux and macOS** they return **501** until a platform implementation exists. See [`docs/environment.md`](docs/environment.md) and [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md).
 - Media scanning and metadata ingestion
 - Watch events and recommendation baselines
 
@@ -116,7 +133,7 @@ Responsible for:
 
 ### Backend
 
-- ASP.NET Core Minimal API (.NET 10 LTS)
+- ASP.NET Core Minimal API (target framework in `api/OrangeTv.Api.csproj`, currently **.NET 9**)
 - Entity Framework Core
 - SQLite
 - Background workers
@@ -201,7 +218,7 @@ The product is designed to **ship on Ubuntu** (appliance / mini PC). You can **d
 
 ### Prerequisites
 
-**Core (all platforms):** Node.js LTS, npm, .NET SDK (see `api/*.csproj`), Git.
+**Core (all platforms):** Node.js LTS, npm, .NET SDK matching **`api/OrangeTv.Api.csproj`** (currently **.NET 9**), Git.
 
 **Ubuntu:** Install **Chromium** or **Chrome** if you use **`npm run dev`** with **BrowserShell** enabled (auto-opens the launcher). See [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
 
@@ -230,6 +247,9 @@ npm run dev
 # optional: Vite + Electron — run the API in another terminal (npm run dev:api).
 # Set ORANGETV_API__BrowserShell__Enabled=false in .env to avoid a second Chrome window.
 npm run dev:electron
+
+# full local gate: launcher lint + Vitest + Electron node tests + dotnet test
+npm run verify
 
 # optional: regenerate committed design-system docs (Python + local Cursor skill)
 npm run design-system
@@ -352,21 +372,17 @@ The launcher, local service, and playback flow must be stable before expanding i
 - Local API + SQLite
 - Chrome/MPV launch orchestration
 
-## Documentation to add next
-
-As the repository evolves, this README should be supported by:
-
-- `docs/architecture.md`
-- `docs/launch-flow.md`
-- `docs/hardware-bringup-checklist.md`
+## Additional documentation
 
 **Testing matrix v1** is tracked in [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md) (revise the version when columns or tiers change).
 
+Future deep-dive docs may include `docs/architecture.md`, `docs/launch-flow.md`, and `docs/hardware-bringup-checklist.md` as the product matures.
+
 ## Status
 
-Orange TV is currently in the early execution and planning phase.
+Core launcher, local API, Chrome/MPV launch orchestration, launch-session listing, Windows minimize/foreground, and kiosk-locked Electron shell behaviors are **shipped as the MVP baseline** (see [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md) and [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md)).
 
-The immediate focus is building the core launcher and local service on Windows, validating Linux behavior in Ubuntu VM, and preparing for target hardware bring-up once the device arrives.
+Ongoing work includes Ubuntu VM hardening, hardware bring-up, and appliance packaging—see the project plan and [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md).
 
 ---
 

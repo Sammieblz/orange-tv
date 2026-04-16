@@ -13,12 +13,18 @@
     opacity var(--transition-fast);
 }
 
+.tile,
+.tileFocused {
+  cursor: pointer;
+}
+
 .tileFocused {
   z-index: 1;
   box-shadow: var(--focus-ring);
 }
 
 .tileDisabled {
+  cursor: not-allowed;
   opacity: 0.45;
   pointer-events: none;
 }

@@ -20,13 +20,13 @@ describe("mergeHomeScreenWithApps", () => {
         lastSessionExitCode: null,
       },
     ];
-    const merged = mergeHomeScreenWithApps(SEED_HOME, apps);
+    const merged = mergeHomeScreenWithApps(SEED_HOME, apps, "success");
     const row = merged.rows.find((r) => r.tiles.some((t) => t.id === "launch-streaming-demo"));
     const tile = row?.tiles.find((t) => t.id === "launch-streaming-demo");
     expect(tile?.sessionHint).toBe("May need sign-in");
   });
 
-  it("leaves tiles unchanged when apps missing", () => {
-    expect(mergeHomeScreenWithApps(SEED_HOME, undefined)).toEqual(SEED_HOME);
+  it("leaves tiles unchanged when apps query is still pending", () => {
+    expect(mergeHomeScreenWithApps(SEED_HOME, undefined, "pending")).toEqual(SEED_HOME);
   });
 });

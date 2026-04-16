@@ -33,6 +33,9 @@ describe("createOrangeTvBridge", () => {
         if (channel === CHANNELS.WINDOW_SET_FULLSCREEN) {
           return Promise.resolve({ ok: true });
         }
+        if (channel === CHANNELS.SHELL_FOCUS) {
+          return Promise.resolve({ ok: true });
+        }
         return Promise.resolve(undefined);
       },
       on: () => {},
@@ -92,6 +95,6 @@ describe("createOrangeTvBridge", () => {
 describe("ORANGE_TV_BRIDGE_KEYS", () => {
   it("is frozen and stable length", () => {
     assert.ok(Object.isFrozen(ORANGE_TV_BRIDGE_KEYS));
-    assert.strictEqual(ORANGE_TV_BRIDGE_KEYS.length, 5);
+    assert.strictEqual(ORANGE_TV_BRIDGE_KEYS.length, 6);
   });
 });

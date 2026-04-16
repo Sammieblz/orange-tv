@@ -29,6 +29,10 @@ interface SidebarProps {
   items: NavItem[];
   section: FocusSection;
   sidebarIndex: number;
+  /** Which rail destination is currently shown (home feed vs placeholder pages). */
+  activeNavId: string;
+  /** Mouse / pointer: switch destination. Keyboard still uses focus + Enter via the shell. */
+  onSelectNav?: (navId: string) => void;
 }
 
 function NavIcon({ id }: { id: string }) {
@@ -36,7 +40,7 @@ function NavIcon({ id }: { id: string }) {
   return <Icon {...iconProps} />;
 }
 
-export function Sidebar({ items, section, sidebarIndex }: SidebarProps) {
+export function Sidebar({ items, section, sidebarIndex, activeNavId, onSelectNav }: SidebarProps) {
   const expanded = section === "sidebar";
   const railRef = useRef<HTMLElement>(null);
 
@@ -65,21 +69,26 @@ export function Sidebar({ items, section, sidebarIndex }: SidebarProps) {
       <ul className={styles.list}>
         {items.map((item, i) => {
           const focused = section === "sidebar" && sidebarIndex === i;
-          const activeHome = (section === "hero" || section === "row") && i === 0;
+          const isCurrentPage = item.id === activeNavId;
+          const className = focused
+            ? `${styles.itemButton} ${styles.itemFocused}`
+            : isCurrentPage
+              ? `${styles.itemButton} ${styles.itemActive}`
+              : styles.itemButton;
           return (
             <li key={item.id}>
-              <div
-                className={
-                  focused ? styles.itemFocused : activeHome ? styles.itemActive : styles.item
-                }
+              <button
+                type="button"
+                className={className}
                 aria-label={item.label}
-                aria-current={activeHome && !focused ? "page" : undefined}
+                aria-current={isCurrentPage ? "page" : undefined}
+                onClick={() => onSelectNav?.(item.id)}
               >
                 <span className={styles.iconWrap} aria-hidden>
                   <NavIcon id={item.id} />
                 </span>
                 <span className={styles.label}>{item.label}</span>
-              </div>
+              </button>
             </li>
           );
         })}

@@ -33,6 +33,7 @@ builder.Services.AddCors(options =>
         });
 });
 builder.Services.Configure<OrangetvApiOptions>(builder.Configuration.GetSection(OrangetvApiOptions.SectionName));
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<SqlitePathResolver>();
 builder.Services.AddDbContext<OrangeTvDbContext>(
     (sp, ob) =>
@@ -49,6 +50,15 @@ builder.Services.AddHostedService<ChromiumShellHostedService>();
 builder.Services.AddSingleton<WatchAggregationService>();
 builder.Services.AddSingleton<WatchHistoryWriteHelper>();
 builder.Services.AddSingleton<ProcessLaunchService>();
+if (OperatingSystem.IsWindows())
+{
+    builder.Services.AddSingleton<IChildProcessWindowOrchestrator, WindowsChildProcessWindowOrchestrator>();
+}
+else
+{
+    builder.Services.AddSingleton<IChildProcessWindowOrchestrator, UnsupportedChildProcessWindowOrchestrator>();
+}
+
 builder.Services.AddSingleton<LibraryRootsResolver>();
 builder.Services.AddSingleton<IMediaMetadataExtractor, FfProbeMediaMetadataExtractor>();
 builder.Services.AddSingleton<IMediaThumbnailGenerator, FfmpegThumbnailGenerator>();

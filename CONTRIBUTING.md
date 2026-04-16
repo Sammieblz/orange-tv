@@ -56,10 +56,30 @@ docs: expand Ubuntu VM setup stub
 
 ## Tests
 
-- **API (xUnit):** `dotnet test` from the repo root (or `dotnet test orange-tv.sln`). Covers `OrangeTv.Api` plus shell/path helpers and HTTP integration tests.
+Root [`package.json`](package.json) scripts:
+
+| Script | What it runs |
+| --- | --- |
+| **`npm test`** | **`dotnet test`** only (API + integration tests). Fastest backend-only check. |
+| **`npm run test:all`** | Launcher **Vitest** → Electron **`node:test`** suite (`ipc-contract`, `preload-bridge`, `shell-profile`, `window-lifecycle`, `window-fullscreen-kiosk-guard`, etc.) → **`dotnet test orange-tv.sln`**. Use before pushing when UI or Electron main changed. |
+| **`npm run verify`** | Launcher **ESLint** then the same sequence as **`test:all`**. Full local gate. |
+
+Individual stacks:
+
+- **API (xUnit):** `dotnet test` or `dotnet test orange-tv.sln` from the repo root.
 - **Launcher (Vitest):** `npm --prefix launcher test`.
-- **Electron main (Node test):** `npm --prefix launcher run test:electron` (shell-profile env matrix).
-- **Both:** `npm run test:all` runs launcher tests then `dotnet test`.
+- **Electron main (Node test):** `npm --prefix launcher run test:electron` — IPC contracts, preload bridge, shell-profile, window lifecycle, **kiosk fullscreen guard** (`launcher/electron/window-fullscreen-kiosk-guard.cjs`).
+
+**`launcher/electron/main.cjs`** is not imported as a whole in unit tests (no headless Electron harness). Kiosk fullscreen **reject-when-leaving-fullscreen** logic lives in the pure module above; integration with `BrowserWindow` is covered by manual/smoke runs (`docs/local-setup-windows.md`, `docs/linux-smoke-checklist.md`). **`WindowsChildProcessWindowOrchestrator`** relies on Win32; API integration tests cover **404/501**; full HWND behavior is validated on Windows manually.
+
+## CI (future)
+
+When adding GitHub Actions (or similar), a practical matrix is:
+
+- **ubuntu-latest:** `npm run verify` or `npm run test:all` (Vitest + Electron node tests + `dotnet test` — Win32 code still **compiles** on Linux for the API project).
+- **windows-latest:** Same, to exercise Windows-specific paths if you add conditional tests later.
+
+No workflow is committed yet; keep **`npm run verify`** green locally as the bar.
 
 ## Code style
 
