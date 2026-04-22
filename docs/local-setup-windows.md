@@ -1,4 +1,4 @@
-# Windows local setup and bootstrap smoke test
+# Windows local setup and smoke test
 
 This document is the **minimum path** to clone, install, run, and verify Orange TV on a **Windows** development machine. The **target appliance OS** is **Ubuntu**; for running the stack on Ubuntu (VM, bare metal, or hardware), use [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md).
 
@@ -15,10 +15,10 @@ Install these **before** the first run:
 | **.NET SDK** | `api/` (ASP.NET Core) | Must match or exceed the project’s target (see `api/*.csproj`). Use `dotnet --version` to confirm |
 | **PowerShell** | Default terminal on Windows | Commands below assume PowerShell or `cmd` |
 
-**Optional for later features** (not required for the current scaffold smoke test):
+**Optional depending on what you exercise** (not all are needed for the minimal smoke test in this doc):
 
-- **Google Chrome** — optional as a manual browser; in **`npm run dev`**, the API may **auto-open** Chrome for the launcher URL via **BrowserShell** (see [Run the app](#run-the-app-development))
-- **MPV, FFprobe** — referenced in the product plan; playback orchestration is not wired in the scaffold yet
+- **Google Chrome / Chromium** — on PATH (or set `ORANGETV_API__BrowserShell__ExecutablePath`) for **BrowserShell** during **`npm run dev`**, and for **`POST /api/v1/launch`** of Chrome-type apps (`ProcessLaunchService`)
+- **MPV** — on PATH for MPV launches from the launcher; **FFprobe** improves local media indexing (optional for a UI-only pass)
 - Visual Studio 2022 — optional; you can use VS Code or the CLI
 
 **Trust HTTPS dev certificate (optional):** If you switch the API to HTTPS profiles, run `dotnet dev-certs https --trust` once. The default dev flow uses HTTP on port **5144**.
@@ -140,7 +140,7 @@ Use this after a clean clone + `npm run setup` + `npm run dev`.
 ## Environment overrides (optional)
 
 - Copy **`.env.example`** to **`.env`** at the repo root if you need local overrides (see `docs/environment.md`).
-- The scaffold does not require a `.env` file for the smoke test above.
+- The smoke test above does not require a `.env` file unless you need overrides.
 
 ## Known gaps and limitations
 
@@ -150,7 +150,7 @@ These are **intentional** at this stage; they are listed so you do not assume mi
 | --- | --- |
 | **Electron is optional** | **`npm run dev:electron`** runs Vite + Electron concurrently; default **`npm run dev`** still uses the Chromium **BrowserShell** from the API unless you disable it |
 | **Browser shell dependency** | Auto-launch prefers `chromium-browser` / `chromium` / Chrome on PATH; set `ORANGETV_API__BrowserShell__ExecutablePath` if your browser lives elsewhere |
-| **Chrome / MPV / FFprobe not wired** | Prerequisites in the README are **forward-looking**; the current API does not spawn Chrome or MPV |
+| **App types beyond Chrome/MPV** | **`POST /api/v1/launch`** supports **`chrome`** and **`mpv`** seeded apps today; other launcher types (e.g. emulators) are **not** implemented in `ProcessLaunchService` yet (**400** `unsupported-app-type`) |
 | **Launcher API usage** | The home grid stays **seeded**; the footer status row uses TanStack Query to reach the API when CORS allows (Development policy includes `localhost:5173`) |
 | **Two `node_modules` folders** | Root holds orchestration deps (e.g. `concurrently`); `launcher/` holds the frontend app deps |
 | **API port** | Default HTTP port is **5144** from `launchSettings.json`; if you change profiles or env vars, update your smoke test URL |

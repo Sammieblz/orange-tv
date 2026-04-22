@@ -43,9 +43,9 @@ See **[`environment.md`](environment.md)** → *Electron shell (main process)* a
 
 **True OS-wide lock** (for example, preventing Alt+Tab or other OS shortcuts from leaving the TV experience) is **not** something Electron alone guarantees. That is an **OS or appliance image** concern: kiosk Linux, Windows assigned access, dedicated hardware remotes, etc. The Orange TV shell can lock **its own** fullscreen/kiosk behavior (see preload `setFullscreen` and [`environment.md`](environment.md)); it does not replace OS-level kiosk policy.
 
-## External apps and the launch-session API
+## External apps and launch sessions
 
-Minimize and foreground for Chrome/MPV are implemented via **platform window APIs** in the .NET host. On **Windows**, those endpoints drive Win32 for the child PID. On **Linux and macOS**, **`POST /api/v1/launch/sessions/{id}/minimize`** and **`.../foreground`** return **501 Not Implemented** until a non-Windows backend exists. **`GET /api/v1/launch/sessions/active`** still lists active sessions from the database so the launcher dock can show what is running. See [`environment.md`](environment.md) → *Local API*.
+Child **Chrome/MPV** windows are **not** part of Electron; the .NET API tracks PIDs and exposes HTTP endpoints for **active sessions**, **minimize**, and **foreground**. **Endpoint list and status codes** live in [`environment.md`](environment.md) → *Local API*; **data model, Win32 behavior, and limitations** in [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md). The renderer calls **`focusShell()`** after a successful minimize so the shell regains focus.
 
 ## Related docs
 

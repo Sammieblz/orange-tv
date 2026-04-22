@@ -3,7 +3,7 @@
 **Ubuntu 24.04 LTS** is the **appliance and validation OS** in the project plan. Use this guide when you run Orange TV **on Ubuntu itself** — bare metal, VM, or mini PC — not only as a “someday” check from Windows.
 
 - **Windows-focused setup** (PowerShell, Windows paths): [`local-setup-windows.md`](local-setup-windows.md)
-- **Sprint Linux gate:** [`linux-smoke-checklist.md`](linux-smoke-checklist.md) · **Cross-environment matrix:** [`testing-matrix-v1.md`](testing-matrix-v1.md)
+- **Linux smoke checklist:** [`linux-smoke-checklist.md`](linux-smoke-checklist.md) · **Cross-environment matrix:** [`testing-matrix-v1.md`](testing-matrix-v1.md)
 
 ## Who this is for
 
@@ -41,7 +41,7 @@ ORANGETV_API__BrowserShell__ExecutablePath=/usr/bin/chromium
 
 **Snap note:** Snap-packaged Chromium can behave differently (sandbox, paths). If launch fails, prefer a **deb** Chromium/Chrome or set **`ExecutablePath`** to the binary you verified in a terminal.
 
-**Optional (future playback / parity with plan):** **MPV**, **ffmpeg/ffprobe** — not required for the current API + Vite smoke test.
+**Optional (launches + media):** **MPV** on PATH for MPV tiles; **ffmpeg/ffprobe** for local media scanning and metadata — skip if you only need BrowserShell + API + Vite UI checks.
 
 ## Clone and install
 
@@ -145,7 +145,7 @@ Install **`curl`** if needed: `sudo apt install -y curl`.
 
 | Gap | Note |
 | --- | --- |
-| **No appliance image yet** | This doc is **developer** Ubuntu; kiosk auto-login, **labwc**, watchdog — see `docs/project-plan-v1.2.md` |
+| **No appliance image yet** | This doc is **developer** Ubuntu; kiosk auto-login, **labwc**, watchdog — see [`docs/project-plan.md`](project-plan.md) |
 | **Parity with Windows** | Same commands; paths and browser packages differ — use **`.env`** and [`environment.md`](environment.md) |
 
 When this checklist is stable, consider promoting sections into `scripts/linux/` helpers referenced from [`scripts/README.md`](scripts/README.md).

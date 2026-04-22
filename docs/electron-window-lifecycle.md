@@ -46,7 +46,7 @@ sequenceDiagram
 
 ### OS-wide lock (not only Electron)
 
-Kiosk and appliance modes control **this shell window** (fullscreen, `setFullScreenable`, IPC rejection when leaving fullscreen). They do **not** implement a full **OS-wide** kiosk (for example blocking Alt+Tab). That requires **OS or deployment** configuration. See [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock*.
+Shell kiosk modes do **not** block OS shortcuts (e.g. Alt+Tab); that is **OS / deployment** policy. Canonical note: [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock*.
 
 ## Fullscreen toggles (debug / validation)
 

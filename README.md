@@ -1,388 +1,108 @@
 # Orange TV
 
-**Orange TV** is a **Linux-based living-room appliance** that unifies **local media**, **browser-based streaming shortcuts** (persistent sign-in sessions), and **retro gaming** inside a fast, TV-first launcher. A **local host service** handles playback orchestration, personalization, diagnostics, and recovery — not a remote cloud backend.
+**Version:** `1.0.0` — declared in [`package.json`](package.json) and [`launcher/package.json`](launcher/package.json).
 
-**Inspiration:** TV-first devices such as **Apple TV**, **Amazon Fire TV** / **Fire TV Stick**, and **Roku** — that instant-on, remote- or controller-friendly “home for everything” feeling — rebuilt as an **open, local-first** stack on a **Linux mini PC** you own, with local libraries and retro games alongside streaming shortcuts.
+**Orange TV** is a **Linux-based living-room appliance** that unifies **local media**, **browser-based streaming shortcuts** (persistent sign-in sessions), and **retro gaming** inside a fast, TV-first launcher. A **local** ASP.NET Core service handles orchestration, persistence, and diagnostics—**not** a remote cloud backend.
 
-**What it is:** a local control plane and shell that orchestrates trusted desktop software (browser, MPV, emulators) on the box, with polished **10-foot UI** ergonomics and a dependable **return-to-home** path after any external app exits or crashes.
+- **What it is:** a control plane + Electron shell that launches trusted desktop software (**Chrome** and **MPV** today; more app types as the API grows) with **10-foot UI** and a predictable **return-to-home** path after external apps exit or lose focus.
+- **What it is not:** a cloud media service, credential vault, or web-automation product. Streaming via Chrome is **best-effort** on Linux; **local media and launcher quality** are the product pillars. Product boundaries and strategy: [`docs/project-plan.md`](docs/project-plan.md).
 
-**What it is not:** a cloud media service, a credential vault, or a web-automation product. Streaming through Chrome is a **best-effort convenience** on Linux; **local media and launcher quality** are the premium pillars. See the strategic note in the plan below.
+**Stack (implemented):** **Electron** (narrow preload IPC) + **Vite / React** + **ASP.NET Core Minimal API** — target framework in [`api/OrangeTv.Api.csproj`](api/OrangeTv.Api.csproj) (e.g. **net9.0**) + **SQLite** + background workers. Target appliance: **Ubuntu 24.04**, **Wayland** + **labwc** (see project plan).
 
-At a glance: **Electron** shell (narrow preload IPC) + **React** TV UI + **ASP.NET Core Minimal API** (see `api/*.csproj` for the current **target framework**, e.g. **.NET 9**) with **SQLite**, **background workers**, and (on the target image) **Ubuntu 24.04 LTS** + **Wayland** + **labwc** for the appliance session.
+## Developer documentation
 
-## Documentation index
+Read **environment variables, HTTP API list, and BrowserShell** in [`docs/environment.md`](docs/environment.md). **IPC, preload, kiosk lock, and OS-wide lock vs shell lock** in [`docs/electron-shell.md`](docs/electron-shell.md). **Window lifecycle, F11, blur/focus** in [`docs/electron-window-lifecycle.md`](docs/electron-window-lifecycle.md).
 
-Structured table of contents for all guides:
+| Topic | Doc |
+| --- | --- |
+| **Setup (Windows / Ubuntu VM)** | [`docs/local-setup-windows.md`](docs/local-setup-windows.md), [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) |
+| **Launch sessions, minimize/foreground, Win32** | [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md) |
+| **Linux validation / testing matrix** | [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md), [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md) |
+| **Long-form plan, delivery, data model, MVP status** | [`docs/project-plan.md`](docs/project-plan.md) |
+| **Focus, gamepad** | [`docs/focus-navigation.md`](docs/focus-navigation.md), [`docs/gamepad-focus-recovery.md`](docs/gamepad-focus-recovery.md) |
+| **Chrome profiles, media library, watch history, recommendations** | [`docs/chrome-profiles-and-backup.md`](docs/chrome-profiles-and-backup.md), [`docs/media-library.md`](docs/media-library.md), [`docs/watch-history.md`](docs/watch-history.md), [`docs/recommendations-rules.md`](docs/recommendations-rules.md) |
 
-- **[`docs/README.md`](docs/README.md)** — index of setup, API, Electron, validation, and feature docs
+## Tooling and quality
 
-Highlights:
+- **EditorConfig:** [`.editorconfig`](.editorconfig) at repo root.
+- **Pre-push / full gate:** `npm run verify` (ESLint, then the same tests as `test:all`). **`npm test`** = .NET only. **`npm run test:all`** = Vitest + Electron `node:test` + `dotnet test` (no lint). Full script table: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- **Env templates:** [`.env.example`](.env.example) — see [`docs/environment.md`](docs/environment.md).
 
-- **Shell / IPC / kiosk:** [`docs/electron-shell.md`](docs/electron-shell.md), [`docs/electron-window-lifecycle.md`](docs/electron-window-lifecycle.md)
-- **Environment and HTTP API surface:** [`docs/environment.md`](docs/environment.md)
-- **Launch sessions and OS window control:** [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md)
-- **Sprint validation (Linux):** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix:** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
+## Principles
 
-## Full-scope plan (v1.2)
+- Appliance-first: predictable **home** and recovery after external app exit or focus loss; privacy by design (no stored account passwords, no scraping browser cookies for “sign-in detection”).
+- **Ubuntu** is the **runtime reference**; validate in a VM or on hardware, not only on Windows.
+- Deterministic, explainable behavior before heavy ML; streaming tiles are **shortcuts**, not the only value.
 
-The canonical in-repo write-up (architecture, OS/session baseline, operations, data model, delivery sequencing, risks) is:
+## Product scope (summary)
 
-- [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md) (includes **MVP baseline (shipped)** status)
+| In scope (high level) | Out of scope (v1) |
+| --- | --- |
+| TV launcher, local API, SQLite, launch orchestration, media library, watch history, rules-based rows | Cloud sync, multi-user accounts, ML-first engine, premature automation |
 
-## Config, lint/format, and env conventions
+Detail: [`docs/project-plan.md`](docs/project-plan.md) (product boundary).
 
-- **EditorConfig**: `.editorconfig` (repo-wide formatting baseline)
-- **Frontend lint/format** (`launcher/`):
-  - `npm --prefix launcher run lint`
-  - `npm --prefix launcher run format:check`
-- **Tests (repo root):** `npm run test` runs **.NET** only; `npm run test:all` runs **Vitest + Electron `node:test` + `dotnet test`**; `npm run verify` runs **launcher lint** then **`test:all`**. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- **Environment variables**:
-  - Examples: `.env.example`
-  - Documentation: `docs/environment.md`
+## Where we develop and validate
 
-## Vision
-
-Ship something that feels like a **dedicated home entertainment appliance**, not a traditional desktop app: boot into the shell, hide the desktop, and always offer a predictable route **home**. Favor **reliability** (watchdogs, logs, diagnostics, rollback, safe mode) alongside features; **privacy by design** (no stored account passwords, no reading browser cookie databases for “sign-in detection”).
-
-## Core goals
-
-- Fast, TV-friendly fullscreen launcher
-- Smooth keyboard and controller navigation
-- Local service for app launching, settings, history, and media scanning
-- Local media playback with resume support
-- Persistent Chrome profile sessions for streaming shortcuts
-- Windows-first development, Ubuntu validation, and later mini-PC deployment
-
-## Current delivery strategy
-
-Development is happening in three stages:
-
-### Windows development workstation
-
-- Common choice for editors and GPU tooling
-- Same `npm` / `dotnet` commands as Ubuntu
-
-### Ubuntu (VM, bare metal, mini PC)
-
-- **Runtime reference** for the appliance and Linux behavior
-- Use [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) for Chromium/BrowserShell, paths, and headless notes
-- **End-of-sprint gate:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)
-- **Cross-environment expectations (v1):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
-
-### Target mini PC hardware
-
-- Final appliance target
-- Used for HDMI/display validation, performance checks, thermals, and real living-room testing
+| Where | Role | Doc |
+| --- | --- | --- |
+| **Windows** | Fast inner loop, editors, GPU tooling | [`docs/local-setup-windows.md`](docs/local-setup-windows.md) |
+| **Ubuntu (VM, bare metal)** | Linux paths, BrowserShell, Linux smoke checklist | [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md), [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) |
+| **Mini PC + TV** | HDMI, thermals, real living-room, final readiness | [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md) |
 
 ## Architecture
 
-Orange TV is built from three main layers:
+1. **Electron shell** — Fullscreen / kiosk, preload IPC, lifecycle, return-to-home with external processes (see [`docs/electron-shell.md`](docs/electron-shell.md)).
+2. **React frontend** — TV layout, focus navigation, gamepad, **Running apps** dock ([`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md)).
+3. **.NET service** — Apps/settings/history, `launch_sessions`, `GET /api/v1/launch/sessions/active`, Win32 minimize/foreground on Windows (501 elsewhere until implemented), `ProcessLaunchService` for spawn/exit, media + recommendations (see `api/`).
 
-### 1. Electron shell
-
-Responsible for:
-
-- Fullscreen launcher window
-- Kiosk-style runtime behavior
-- Secure preload bridge
-- Shell lifecycle and crash handling
-- Returning focus after child processes exit
-
-### 2. React frontend
-
-Responsible for:
-
-- TV UI layout
-- Sidebar, hero, rows, and tiles
-- Focus-based navigation
-- Keyboard and gamepad input handling
-- Rendering launcher data from the local API
-- **Running apps dock:** polls active launch sessions and calls minimize/foreground APIs (see [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md))
-
-### 3. Local .NET service
-
-Responsible for:
-
-- Apps/settings/history APIs
-- SQLite persistence
-- Launch orchestration for Chrome and MPV
-- **Launch sessions** (`launch_sessions` table): one row per spawned child process; **`GET /api/v1/launch/sessions/active`** lists sessions that have not ended (joined to `apps` for labels). End-of-session is handled when the child exits (see `ProcessLaunchService`).
-- **Child window orchestration (optional minimize/foreground):** on **Windows**, `POST /api/v1/launch/sessions/{id}/minimize` and `.../foreground` use Win32 for the session PID; on **Linux and macOS** they return **501** until a platform implementation exists. See [`docs/environment.md`](docs/environment.md) and [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md).
-- Media scanning and metadata ingestion
-- Watch events and recommendation baselines
-
-## OS + session baseline (target appliance)
-
-- Ubuntu 24.04 LTS appliance image
-- Wayland session with `labwc`
-- Auto-login into the appliance account and start Orange TV on boot
-- Watchdog/recovery behavior treated as core, not late polish
-
-## Planned stack
-
-### Frontend
-
-- Electron
-- Vite
-- React
-- Zustand
-- TanStack Query
-- GSAP
-- CSS Modules + CSS variables
-- Iconoir icons
-
-### Backend
-
-- ASP.NET Core Minimal API (target framework in `api/OrangeTv.Api.csproj`, currently **.NET 9**)
-- Entity Framework Core
-- SQLite
-- Background workers
-- FFprobe
-- TagLibSharp
-- Serilog
-
-### Platform
-
-- Windows for development
-- Ubuntu VM for Linux validation
-- Ubuntu on mini PC for final deployment
-- Chrome for streaming shortcuts
-- MPV for local media playback
+**Target OS image (appliance):** Ubuntu 24.04, `labwc`, auto-login, watchdog/recovery per project plan (not the full dev-VM experience).
 
 ## Repository structure
 
 ```text
 orange-tv/
-  launcher/        # Electron + React frontend
-  api/             # Local .NET service
+  launcher/        # Electron + Vite + React
+  api/             # ASP.NET Core Minimal API
   shared/          # Shared types/contracts
-  scripts/         # Dev, packaging, and platform scripts
-  docs/            # Architecture, setup notes, decisions, diagrams
+  scripts/         # Dev and tooling
+  docs/            # Guides (this README is the entry index)
 ```
 
-## Product scope
+## Stack (libraries)
 
-### In scope
-
-- Fullscreen launcher shell
-- TV-style navigation
-- Streaming shortcut tiles
-- Local media browsing and playback
-- Watch history and resume points
-- Chrome profile persistence
-- Ubuntu VM validation path
-- Mini-PC bring-up checklist
-
-### Out of scope for the first usable release
-
-- Advanced cloud sync
-- Multi-user account system
-- Heavy ML-first recommendation engine
-- Over-engineered automation before stable launcher flow exists
-
-## Operations and recovery (core platform)
-
-Orange TV is designed to behave like an appliance: if an external app exits/crashes or the shell loses focus, it should reliably return home.
-
-Planned capabilities (tracked in the full plan):
-
-- Watchdog (restart shell/service and restore home)
-- Safe mode after repeated failures
-- OTA updates with rollback
-- Diagnostics export bundle
-- Backup/restore (browser profiles, DB, settings, artwork cache)
-
-## Development principles
-
-- Build a fast inner loop on your workstation (Windows or Ubuntu)
-- Treat **Ubuntu** as the **runtime reference** for appliance behavior; validate continuously in a VM or on hardware
-- Keep hardware-specific work isolated until the device arrives
-- Favor stable, explainable behavior over premature complexity
-- Use deterministic recommendation logic before ML
-- Treat streaming services as shortcut integrations, not the only product value
+| Layer | Pieces |
+| --- | --- |
+| Frontend | Electron, Vite, React, Zustand, TanStack Query, GSAP, CSS Modules, Iconoir |
+| Backend | ASP.NET Core, EF Core, SQLite, Serilog, FFprobe, TagLibSharp |
+| Platform | Windows (dev), Ubuntu (reference + target), Chrome / MPV for launches |
 
 ## Getting started
 
-The product is designed to **ship on Ubuntu** (appliance / mini PC). You can **develop on Windows**, **develop on Ubuntu**, or **validate on an Ubuntu VM** — the same root scripts apply.
+**Prerequisites:** Node.js LTS, npm, **.NET SDK** matching [`api/OrangeTv.Api.csproj`](api/OrangeTv.Api.csproj), Git. For **`npm run dev`**, install Chromium/Chrome on Linux if you use BrowserShell (see Ubuntu doc). Optional: MPV, FFprobe for full media features.
 
-| Environment | Doc |
-| --- | --- |
-| **Ubuntu** (bare metal, VM, or target hardware) | [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md) — primary runtime guide |
-| **Windows** workstation | [`docs/local-setup-windows.md`](docs/local-setup-windows.md) — PowerShell, Chrome paths, Windows-specific notes |
-
-**Sprint validation on Linux:** [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md) · **Testing matrix (Windows / VM / hardware):** [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md)
-
-**Launcher TV focus (arrow keys, Enter, Escape):** [`docs/focus-navigation.md`](docs/focus-navigation.md) · **Gamepad + focus recovery:** [`docs/gamepad-focus-recovery.md`](docs/gamepad-focus-recovery.md)
-
-**Git branches and commits:** see [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
-### Prerequisites
-
-**Core (all platforms):** Node.js LTS, npm, .NET SDK matching **`api/OrangeTv.Api.csproj`** (currently **.NET 9**), Git.
-
-**Ubuntu:** Install **Chromium** or **Chrome** if you use **`npm run dev`** with **BrowserShell** enabled (auto-opens the launcher). See [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
-
-**Windows:** Chrome may already be present; BrowserShell can use installed Chrome. See [`docs/local-setup-windows.md`](docs/local-setup-windows.md).
-
-**Forward-looking** (streaming / local playback in the plan): MPV, FFprobe — not required for the current scaffold smoke test.
-
-**Optional:** VS Code, SQLite viewer extension, Ubuntu 24.04 VM or device matching the appliance target.
-
-### Local development workflow
-
-1. Run the local .NET service and the **Vite** launcher (**`npm run dev`** at the repo root runs both).
-2. Optionally use **`npm run dev:electron`** (with **BrowserShell** disabled if you want only Electron) — see [`docs/local-setup-windows.md`](docs/local-setup-windows.md) or [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md).
-3. **On Windows:** iterate locally; **on Ubuntu:** use the same commands as the target OS.
-4. If your main editor is on Windows, still **validate on Ubuntu** regularly (VM or device) using [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md).
-
-### Suggested commands (from repository root)
+1. `npm run setup` — root + launcher install, `dotnet restore`, `dotnet tool restore`
+2. `npm run dev` — Vite on **http://localhost:5173** + API on **http://localhost:5144** (see `api/Properties/launchSettings.json`, `launcher/vite.config.ts`)
+3. Optional: `npm run dev:electron` (run `npm run dev:api` in another terminal; set `ORANGETV_API__BrowserShell__Enabled=false` in `.env` to avoid a second Chrome alongside Electron)
+4. Validate on Linux regularly: [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md)
 
 ```bash
-# one-shot install: root deps, launcher deps, dotnet restore
 npm run setup
-
-# start Vite (launcher) and API together (API may auto-open Chromium for the launcher URL)
 npm run dev
-
-# optional: Vite + Electron — run the API in another terminal (npm run dev:api).
-# Set ORANGETV_API__BrowserShell__Enabled=false in .env to avoid a second Chrome window.
-npm run dev:electron
-
-# full local gate: launcher lint + Vitest + Electron node tests + dotnet test
-npm run verify
-
-# optional: regenerate committed design-system docs (Python + local Cursor skill)
-npm run design-system
+# optional: npm run dev:electron
+npm run verify          # lint + all tests
+npm run design-system  # optional: regenerate design-system docs
 ```
 
-The API listens on **`http://localhost:5144`** and the Vite dev server on **`http://localhost:5173`** (bound to **`127.0.0.1:5173`** in `launcher/vite.config.ts`; **`localhost`** still works in the browser) by default. **Electron**, **BrowserShell**, and **Ubuntu-specific** notes: [`docs/local-setup-windows.md`](docs/local-setup-windows.md), [`docs/local-setup-ubuntu-vm.md`](docs/local-setup-ubuntu-vm.md), and [`docs/electron-shell.md`](docs/electron-shell.md).
+**Branches / commits / migrations:** [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-> **Note:** Exact scripts may evolve as the monorepo grows; `docs/local-setup-windows.md` stays the concrete Windows reference.
+## Operations and recovery (roadmap)
 
-## Environment expectations
-
-Orange TV must support three execution environments:
-
-### Windows
-
-Used for:
-
-- Frontend development
-- Backend development
-- Seeded launcher data testing
-- Basic Chrome and MPV launch flow verification
-
-### Ubuntu VM
-
-Used for:
-
-- Linux path handling validation
-- Kiosk/fullscreen flow validation
-- Chrome profile persistence testing
-- MPV playback validation
-- Crash recovery and packaging checks
-
-### Mini PC hardware
-
-Used for:
-
-- HDMI/display behavior
-- Controller pairing
-- Thermal checks
-- Decode/performance validation
-- Final appliance readiness
-
-## Roadmap overview
-
-### Sprint 0 — Foundations & Environments
-
-- Repo bootstrap
-- Windows-first dev workflow
-- Ubuntu VM setup
-- Architecture notes and validation checklist
-
-### Sprint 1 — Shell, UI & Navigation
-
-- Electron shell
-- Secure preload bridge
-- React shell
-- Focus grid
-- Keyboard and controller navigation
-
-### Sprint 2 — Service, Persistence & Launch Orchestration
-
-- Local .NET service
-- SQLite schema and migrations
-- Apps/settings/history APIs
-- Chrome and MPV launch flow
-- Return-to-launcher behavior
-
-### Sprint 3 — Media, History & Recommendation Baseline
-
-- Media scanning
-- Metadata extraction
-- Thumbnails
-- Continue watching
-- Rules-based recommendation rows
-
-### Sprint 4 — Ubuntu VM Hardening
-
-- Kiosk validation
-- Linux packaging checks
-- Crash recovery validation
-- Known gaps before hardware
-
-### Sprint 5 — Hardware Bring-up & Release Prep
-
-- Mini-PC deployment
-- Decode/performance checks
-- Thermals and input-device validation
-- Release readiness checklist
-
-## Definition of done
-
-A task is done when:
-
-- Implementation is complete
-- The happy path works without silent failures
-- Relevant logs/config/docs are updated
-- The feature is smoke-tested in the intended environment
-- Any follow-up gaps are captured as separate backlog work
-
-## Risks
-
-### Linux-specific behavior drift
-
-Windows development is fast, but Linux validation must happen continuously to prevent late surprises.
-
-### Hardware delay
-
-Core development should never stall waiting for the mini PC.
-
-### Scope creep
-
-The launcher, local service, and playback flow must be stable before expanding into advanced features.
-
-## Near-term backlog focus
-
-- Repo bootstrap
-- Ubuntu VM contract environment
-- Electron packaging, auto-update, and installer signing (dev shell + `dev:electron` exist today)
-- TV-style navigation
-- Local API + SQLite
-- Chrome/MPV launch orchestration
-
-## Additional documentation
-
-**Testing matrix v1** is tracked in [`docs/testing-matrix-v1.md`](docs/testing-matrix-v1.md) (revise the version when columns or tiers change).
-
-Future deep-dive docs may include `docs/architecture.md`, `docs/launch-flow.md`, and `docs/hardware-bringup-checklist.md` as the product matures.
+Watchdog, safe mode, OTA/rollback, diagnostics export, backup/restore are **planned** platform capabilities—see **Operations** sections in [`docs/project-plan.md`](docs/project-plan.md).
 
 ## Status
 
-Core launcher, local API, Chrome/MPV launch orchestration, launch-session listing, Windows minimize/foreground, and kiosk-locked Electron shell behaviors are **shipped as the MVP baseline** (see [`docs/project-plan-v1.2.md`](docs/project-plan-v1.2.md) and [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md)).
-
-Ongoing work includes Ubuntu VM hardening, hardware bring-up, and appliance packaging—see the project plan and [`docs/linux-smoke-checklist.md`](docs/linux-smoke-checklist.md).
+An **MVP baseline** is shipped: launcher, local API, Chrome/MPV launch, launch sessions API, running-apps dock, Windows window control for minimize/foreground, kiosk-locked shell behavior. Ongoing: Ubuntu hardening, hardware bring-up, packaging. **MVP detail:** [`docs/project-plan.md`](docs/project-plan.md) (MVP baseline), [`docs/launch-sessions-and-windowing.md`](docs/launch-sessions-and-windowing.md).
 
 ---
 
