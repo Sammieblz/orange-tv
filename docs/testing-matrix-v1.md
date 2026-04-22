@@ -1,9 +1,9 @@
 # Testing matrix v1 (Windows · Ubuntu VM · hardware)
 
 **Version:** 1  
-**Purpose:** Map **where** each class of check is authoritative, **partial**, or **not applicable**, so sprint validation does not over-claim VM coverage or miss hardware-only risks.
+**Purpose:** Map **where** each class of check is authoritative, **partial**, or **not applicable**, so Linux VM checks do not over-claim coverage or miss hardware-only risks.
 
-**Sprint gate (Ubuntu):** [`linux-smoke-checklist.md`](linux-smoke-checklist.md)
+**Ubuntu Linux gate:** [`linux-smoke-checklist.md`](linux-smoke-checklist.md)
 
 ## Legend
 
@@ -24,7 +24,7 @@
 | **API startup + HTTP contracts** | Full | Full | Full |
 | **Platform / OS awareness** | Full (`isWindows`) | Full (`isLinux`) | Full |
 | **Fullscreen / kiosk / no desktop leak** | Partial — dev desktop | Partial — VM display stack | **Full** — labwc / appliance session |
-| **External process launch** (Chrome, MPV, RetroArch) | Full — path quirks | Full — Linux argv/env | **Full** — real packages + permissions |
+| **External process launch** (Chrome, MPV) | Full — path quirks | Full — Linux argv/env | **Full** — real packages + permissions |
 | **Launch sessions + running apps dock** (`GET .../launch/sessions/active`) | Full | Full | Full |
 | **OS minimize / foreground** (`POST .../minimize`, `.../foreground`) | **Full** — Win32 orchestration | **Partial** — API returns **501**; list endpoint still works | **Partial** until Linux backend — same as VM |
 | **Return to launcher / focus recovery** | Partial | Partial | **Full** |
@@ -55,4 +55,4 @@
 - [`local-setup-windows.md`](local-setup-windows.md)
 - [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md)
 - [`linux-smoke-checklist.md`](linux-smoke-checklist.md)
-- [`project-plan-v1.2.md`](project-plan-v1.2.md)
+- [`project-plan.md`](project-plan.md)

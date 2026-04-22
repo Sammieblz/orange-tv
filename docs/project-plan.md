@@ -1,8 +1,9 @@
-# ORANGE TV | Revised Full-Scope Project Plan
+# ORANGE TV | Project plan
 
 **Appliance Platform • UX Shell • Local Media • Streaming Sessions • Games • Operations**  
-**Version 1.2 — March 2026**  
-**Revision focus:** product positioning, architecture cleanup, platform hardening, delivery sequencing, and restored implementation detail
+**Product / repository version:** `1.0.0` (see root [`package.json`](../package.json)).  
+**Last updated:** March 2026.  
+**Scope:** product positioning, architecture, platform hardening, delivery sequencing, and implementation detail.
 
 > **Confidential — Orange TV Project**
 
@@ -22,9 +23,11 @@ This update reincorporates implementation-level detail for the frontend, local h
 | --- | --- | --- |
 | Product promise | 4K HDR streaming box, local media, recommendations, games | Unified home-entertainment appliance; local media + launcher quality are premium pillars, Linux streaming is best-effort convenience |
 | Window/session strategy | Openbox first, possible later move to Sway | Single shipping baseline: Wayland session with **labwc** for appliance behavior and simpler fullscreen window management |
-| Backend model | ASP.NET Core MVC on .NET 9 | ASP.NET Core **Minimal API** on **.NET 10 LTS** with clear responsibility boundaries |
+| Backend model | ASP.NET Core MVC on .NET 9 | ASP.NET Core **Minimal API** on **.NET 9** with clear responsibility boundaries (TFM: **`api/OrangeTv.Api.csproj`**, currently **net9.0**; stepping to a **.NET LTS** line is a separate upgrade from the in-repo TFM) |
 | Personalization | ML-first recommendation framing | Rules-first ranking, heuristics second, optional on-device ML only after data quality justifies it |
 | Roadmap | Feature phases skewed toward breadth | Operationally sequenced releases prioritizing platform stability, recovery, and shippable slices |
+
+**Implementation note (repo):** The shipped API is **.NET 9** (`<TargetFramework>net9.0</TargetFramework>` in [`api/OrangeTv.Api.csproj`](../api/OrangeTv.Api.csproj)). Treat that project file as the TFM source of truth; LTS policy and a future TFM bump belong in release planning, not in conflicting copy here.
 
 ### Strategic note
 
@@ -206,15 +209,15 @@ export function useNavigation(layout) {
 - Local host service builds Chrome/MPV/RetroArch command, records launch session, spawns process.
 - On exit, service emits completion, Electron restores launcher, UI refreshes key rows.
 
-## Section 7 — Local host service (.NET 10 LTS)
+## Section 7 — Local host service
 
-The backend is a local host service (control plane), not a server-rendered MVC app.
+The backend is a local host service (control plane), not a server-rendered MVC app. **In-repo TFM** is **net9.0** (see [`api/OrangeTv.Api.csproj`](../api/OrangeTv.Api.csproj)); a move to a future **.NET LTS** is an explicit upgrade, not a second “current version” in print.
 
 ### Recommended stack
 
 | Concern | Recommendation | Reason |
 | --- | --- | --- |
-| Framework | ASP.NET Core Minimal API on .NET 10 LTS | Smaller surface area, easier hosting, long support runway |
+| Framework | ASP.NET Core Minimal API (net9.0 as implemented; LTS when we upgrade) | Smaller surface area, easier hosting; long support by targeting an LTS band at upgrade time |
 | Persistence | SQLite + EF Core | Strong fit for single-device local model |
 | Background work | Hosted services with explicit scheduling | Clear place for scanners, polling, refreshes, supervision |
 | Logging | Structured local logs + support export packaging | Faster debugging without cloud dependency |
@@ -396,7 +399,7 @@ Proceed as a local-first entertainment appliance with a polished shell, dependab
 | --- | --- |
 | OS baseline | Ubuntu 24.04 LTS appliance image with a Wayland labwc session |
 | Shell | Electron as secure kiosk shell; React for TV UI |
-| Backend | ASP.NET Core Minimal API on .NET 10 LTS |
+| Backend | ASP.NET Core Minimal API (net9.0; [`api/OrangeTv.Api.csproj`](../api/OrangeTv.Api.csproj)) |
 | Data | SQLite + structured caches + support artifacts |
 | Streaming approach | Persistent Chrome profiles with best-effort Linux service support |
 | Differentiator | Local media quality, fast return-home behavior, polished TV ergonomics |

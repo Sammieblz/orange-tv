@@ -88,8 +88,8 @@ Deep dive: [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md
 
 **Notes (launcher dock and session APIs):**
 
-- **OS-wide lock:** True OS-wide lock (for example, no Alt+Tab) is **not** what Electron alone guarantees; that is an **OS / appliance image** concern (kiosk Linux, assigned access, etc.). See [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock*.
-- **Linux / macOS minimize & foreground:** Those endpoints return **501** until a non-Windows implementation exists; the dock can still list **active sessions** from **`GET /api/v1/launch/sessions/active`** (data from the API).
+- **OS-wide lock** (e.g. Alt+Tab) vs **shell** lock: see [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock* (canonical explanation).
+- **Linux / macOS:** `minimize` / `foreground` return **501** until implemented; **`GET .../sessions/active`** still lists rows. Details: [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md).
 
 **Chrome profiles:** the **`launcher.chrome.profilesRoot`** setting (via **`PUT /api/v1/settings/launcher.chrome.profilesRoot`**) overrides the env default for where profile segment folders live. Backup and DB-vs-profile confusion are documented in [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md).
 

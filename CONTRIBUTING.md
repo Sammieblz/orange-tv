@@ -1,5 +1,7 @@
 # Contributing to Orange TV
 
+**Product version:** `1.0.0` in [`package.json`](package.json) and [`launcher/package.json`](launcher/package.json).
+
 ## Branches
 
 - **`main`** — integration branch; keep it buildable. Direct pushes are discouraged; use pull requests.

@@ -1,6 +1,6 @@
-# Linux smoke checklist (Ubuntu VM — sprint gate)
+# Linux smoke checklist (Ubuntu VM)
 
-Run this at **the end of each sprint** on an **Ubuntu 24.04** VM (or Linux host) after `npm run setup` and `npm run dev`, unless a row is marked **N/A** for the current milestone.
+Run this on an **Ubuntu 24.04** VM (or Linux host) after `npm run setup` and `npm run dev`—for example before a **release** or after **substantial launcher/API changes**—unless a row is marked **N/A** for the current milestone.
 
 **Setup reference:** [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md)  
 **Where this fits overall:** [`testing-matrix-v1.md`](testing-matrix-v1.md)
@@ -8,14 +8,14 @@ Run this at **the end of each sprint** on an **Ubuntu 24.04** VM (or Linux host)
 ## How to use
 
 - Aim for **~15 minutes** end-to-end once you are familiar with the steps.
-- If a **P1** item is not implemented yet, mark it **N/A** and note the sprint.
-- Record **pass/fail/N/A** and the **commit SHA** in your sprint notes or ticket.
+- If a **P1** item is not implemented yet, mark it **N/A** and note why.
+- Record **pass/fail/N/A** and the **commit SHA** in your release notes or issue tracker.
 
 This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux clone after `git pull` — see [`local-setup-ubuntu-vm.md`](local-setup-ubuntu-vm.md)). Use **`localhost`** URLs below.
 
 ---
 
-## P0 — Must pass (every sprint)
+## P0 — Must pass (each full run)
 
 ### Launcher startup
 
@@ -71,14 +71,14 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
 - [ ] **Linux (expected):** `POST /api/v1/launch/sessions/{sessionId}/minimize` returns **501** — this is **expected** until a Linux window backend exists; it is **not** a regression. The dock may still list active sessions.
 - [ ] Launcher UI shows the **Running apps** strip with operator notes (OS lock vs shell lock; Linux minimize limitations) when sessions exist or after load.
 
-### Process launch (Chrome / MPV / RetroArch)
+### Process launch (Chrome / MPV)
 
-- [ ] From Orange TV, launching the configured **external app** starts a process (log or `ps` confirms).
+- [ ] From Orange TV, launching a **Chrome** or **MPV** tile starts a process (log or `ps` confirms).
 - [ ] Launch uses **Linux-appropriate** paths and arguments (no Windows-only assumptions in API or scripts).
 
 ### Process recovery / return home
 
-- [ ] After the external app **exits normally**, focus returns to the launcher within a **bounded time** (define SLA in sprint, e.g. under 10 seconds).
+- [ ] After the external app **exits normally**, focus returns to the launcher within a **bounded time** (define an SLA in release criteria if you need a hard number, e.g. under 10 seconds).
 - [ ] After **killing** the child process (`kill <pid>`), launcher recovers without a manual desktop intervention.
 
 **VM limitation:** Focus stacking under Wayland vs X11 may differ from **hardware + TV**.
@@ -93,12 +93,12 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
 - [ ] **MPV** (or chosen adapter) plays a **known sample file** from a path on the VM.
 - [ ] Exit MPV; launcher **refreshes** “continue watching” or equivalent row if implemented.
 
-**N/A** until MPV integration exists.  
+**Skip** if MPV is not installed on the VM.  
 **VM limitation:** VA-API / decode path may not match **mini PC**; treat decode quality as **hardware-primary**.
 
 ---
 
-## P2 — Periodic or pre-release (not every sprint)
+## P2 — Periodic or pre-release (not every run)
 
 - [ ] Stream a **browser** shortcut session; confirm **profile persistence** across two launches (Chrome user-data-dir).
 - [ ] **Controller** navigates shell and launches one item (if supported).

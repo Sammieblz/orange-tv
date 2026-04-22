@@ -1,7 +1,7 @@
 namespace OrangeTv.Api.Data.Entities;
 
 /// <summary>
-/// Launcher tile / catalog row aligned with the v1.2 plan <c>apps</c> table (baseline columns only).
+/// Launcher tile / catalog row aligned with the <c>apps</c> table in the project plan (baseline columns only).
 /// </summary>
 public sealed class AppEntity
 {
