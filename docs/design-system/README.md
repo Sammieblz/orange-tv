@@ -17,4 +17,4 @@ The script writes into `docs/design-system/` when possible. If the skill path is
 - **`MASTER.md`** — global recommendations (colors, type, spacing, anti-patterns).
 - **`pages/`** — optional per-page overrides (create manually or extend the generator with `--page`).
 
-Launcher-specific **orange accent, 10-foot layout, and focus model** remain defined in `.cursor/frontend/SKILL.md` and `launcher/src/styles/variables.css`.
+Launcher-specific **orange accent, 10-foot layout, focus model, and engineering standards** are defined in [`.cursor/skills/orange-tv-design-system/SKILL.md`](../../.cursor/skills/orange-tv-design-system/SKILL.md) and `launcher/src/styles/variables.css`.
