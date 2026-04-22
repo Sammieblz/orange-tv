@@ -65,6 +65,41 @@ describe("getShellWindowMode", () => {
   });
 });
 
+describe("isWebShellEnabled (SAM-61, on by default)", () => {
+  it("is true when unset (default-on)", () => {
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: undefined }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), true);
+    });
+  });
+
+  it("stays on for explicit '1' / 'true'", () => {
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "1" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), true);
+    });
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "TRUE" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), true);
+    });
+  });
+
+  it("opts out on '0' or 'false' (case-insensitive)", () => {
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "0" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), false);
+    });
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "false" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), false);
+    });
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "FALSE" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), false);
+    });
+  });
+
+  it("treats other unrecognised strings as enabled (default-on is sticky)", () => {
+    withEnv({ ORANGETV_ELECTRON__WEB_SHELL_ENABLED: "yes" }, (sp) => {
+      assert.strictEqual(sp.isWebShellEnabled(), true);
+    });
+  });
+});
+
 describe("isKioskLockedShell", () => {
   it("is true for appliance or kiosk flag", () => {
     withEnv({ ORANGETV_ELECTRON__SHELL_PROFILE: "appliance" }, (sp) => {

@@ -20,6 +20,20 @@ function isKioskFlag() {
   return readBool(process.env, "ORANGETV_ELECTRON__KIOSK");
 }
 
+/**
+ * Route streaming tiles to the in-window BrowserView (SAM-61). Now **on by default**
+ * because the legacy "spawn Chrome" path creates a separate OS window with its own
+ * title bar, taskbar entry, and minimize/drag affordances — that is not the Orange
+ * TV experience. Opt out by setting the env var to `0` or `false`.
+ */
+function isWebShellEnabled() {
+  const v = process.env.ORANGETV_ELECTRON__WEB_SHELL_ENABLED;
+  if (typeof v !== "string") return true;
+  const lower = v.toLowerCase();
+  if (lower === "0" || lower === "false") return false;
+  return true;
+}
+
 /** Appliance or explicit kiosk: shell should stay fullscreen (no casual exit). */
 function isKioskLockedShell() {
   return isApplianceProfile() || isKioskFlag();
@@ -87,8 +101,9 @@ function getWindowChromeOptions(workArea) {
  * Metadata policy for preload getRuntimeMetadata (minimal in appliance).
  */
 function getRuntimeMetadataPayload() {
+  const webShellEnabled = isWebShellEnabled();
   if (isApplianceProfile()) {
-    return { shellProfile: "appliance", channel: "stable" };
+    return { shellProfile: "appliance", channel: "stable", webShellEnabled };
   }
   const profile = process.env.ORANGETV_ELECTRON__SHELL_PROFILE || "default";
   if (isDevElectron()) {
@@ -97,12 +112,14 @@ function getRuntimeMetadataPayload() {
       node: process.versions.node,
       chrome: process.versions.chrome,
       electron: process.versions.electron,
+      webShellEnabled,
     };
   }
   return {
     shellProfile: profile,
     chrome: process.versions.chrome,
     electron: process.versions.electron,
+    webShellEnabled,
   };
 }
 
@@ -111,6 +128,7 @@ module.exports = {
   isApplianceProfile,
   isKioskFlag,
   isKioskLockedShell,
+  isWebShellEnabled,
   shouldOpenDevtools,
   getShellWindowMode,
   getWindowChromeOptions,

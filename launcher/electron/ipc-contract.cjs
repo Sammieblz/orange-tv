@@ -13,6 +13,12 @@ const CHANNELS = {
   WINDOW_SET_FULLSCREEN: "orange-tv:window-set-fullscreen",
   /** Renderer -> main: bring the shell window to the foreground (after minimizing a child app). */
   SHELL_FOCUS: "orange-tv:shell-focus",
+  /** Renderer -> main: open a streaming tile URL inside an in-window BrowserView (SAM-61). */
+  WEB_SHELL_OPEN: "orange-tv:web-shell-open",
+  /** Renderer -> main: close the active in-window BrowserView (Back/Escape or UI trigger). */
+  WEB_SHELL_CLOSE: "orange-tv:web-shell-close",
+  /** Main -> renderer push: notifies the launcher that the BrowserView opened or closed. */
+  WEB_SHELL_STATE: "orange-tv:web-shell-state",
 };
 
 /** Channels the preload bridge uses with `ipcRenderer.invoke` (subset of CHANNELS). */
@@ -21,6 +27,8 @@ const RENDERER_INVOKE_CHANNELS = Object.freeze([
   CHANNELS.LAUNCH_REQUEST,
   CHANNELS.WINDOW_SET_FULLSCREEN,
   CHANNELS.SHELL_FOCUS,
+  CHANNELS.WEB_SHELL_OPEN,
+  CHANNELS.WEB_SHELL_CLOSE,
 ]);
 
 module.exports = { CHANNELS, RENDERER_INVOKE_CHANNELS };

@@ -110,6 +110,91 @@ describe("launchAppTileIfActivated", () => {
     expect(clearSpy).not.toHaveBeenCalled();
   });
 
+  it("SAM-64: routes chrome-type streaming tiles through openWebShell when the flag is on and the bridge is present", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    const openWebShell = vi.fn(async () => ({ ok: true as const, appId: "netflix" }));
+    (window as unknown as { orangeTv: Record<string, unknown> }).orangeTv = {
+      launchRequest,
+      openWebShell,
+    };
+    const onLaunchSucceeded = vi.fn();
+
+    await launchAppTileIfActivated(
+      { context: "tile", id: "app:netflix" },
+      {
+        webShellEnabled: true,
+        resolveApp: (id) =>
+          id === "netflix"
+            ? {
+                id: "netflix",
+                type: "chrome",
+                launchUrl: "https://www.netflix.com/browse",
+                chromeProfileSegment: null,
+              }
+            : null,
+        onLaunchSucceeded,
+      },
+    );
+
+    expect(openWebShell).toHaveBeenCalledWith({
+      url: "https://www.netflix.com/browse",
+      appId: "netflix",
+      chromeProfileSegment: null,
+    });
+    expect(launchRequest).not.toHaveBeenCalled();
+    expect(onLaunchSucceeded).toHaveBeenCalledOnce();
+  });
+
+  it("SAM-64: falls back to the external launch path when openWebShell returns ok:false", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    const openWebShell = vi.fn(async () => ({ ok: false as const, reason: "web-shell-disabled" }));
+    (window as unknown as { orangeTv: Record<string, unknown> }).orangeTv = {
+      launchRequest,
+      openWebShell,
+    };
+
+    await launchAppTileIfActivated(
+      { context: "tile", id: "app:netflix" },
+      {
+        webShellEnabled: true,
+        resolveApp: () => ({
+          id: "netflix",
+          type: "chrome",
+          launchUrl: "https://www.netflix.com",
+          chromeProfileSegment: null,
+        }),
+      },
+    );
+
+    expect(openWebShell).toHaveBeenCalledOnce();
+    expect(launchRequest).toHaveBeenCalledWith({ kind: "app", id: "netflix" });
+  });
+
+  it("SAM-64: keeps the legacy external path when webShellEnabled is false", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const }));
+    const openWebShell = vi.fn();
+    (window as unknown as { orangeTv: Record<string, unknown> }).orangeTv = {
+      launchRequest,
+      openWebShell,
+    };
+
+    await launchAppTileIfActivated(
+      { context: "tile", id: "app:netflix" },
+      {
+        webShellEnabled: false,
+        resolveApp: () => ({
+          id: "netflix",
+          type: "chrome",
+          launchUrl: "https://www.netflix.com",
+          chromeProfileSegment: null,
+        }),
+      },
+    );
+
+    expect(openWebShell).not.toHaveBeenCalled();
+    expect(launchRequest).toHaveBeenCalledWith({ kind: "app", id: "netflix" });
+  });
+
   it("launches app-prefixed tiles", async () => {
     const launchRequest = vi.fn(async () => ({ ok: true as const }));
     (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {

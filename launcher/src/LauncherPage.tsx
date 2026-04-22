@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApps } from "@/api/queries/useApps.ts";
 import { useContinueWatching } from "@/api/queries/useContinueWatching.ts";
 import { useHomeRecommendations } from "@/api/queries/useHomeRecommendations.ts";
@@ -18,6 +18,8 @@ import { useLauncherGamepad } from "@/hooks/useLauncherGamepad.ts";
 import { useLauncherKeyboard } from "@/hooks/useLauncherKeyboard.ts";
 import { useShellFocusRecovery } from "@/hooks/useShellFocusRecovery.ts";
 import { launchAppTileIfActivated } from "@/launchFromTileActivate.ts";
+import type { StreamingLaunchInputApp } from "@/player/streamingLaunchRoute.ts";
+import { WebShellTopBar } from "@/player/WebShellTopBar.tsx";
 import { useFocusStore } from "@/store/focusStore.ts";
 import { useNavViewStore } from "@/store/navViewStore.ts";
 import type { HomeScreenData } from "@/data/seedHome.ts";
@@ -61,6 +63,39 @@ export function LauncherPage() {
 
   const focus = useFocusStore((s) => s.focus);
 
+  const [webShellEnabled, setWebShellEnabled] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const api = typeof window !== "undefined" ? window.orangeTv : undefined;
+    api?.getRuntimeMetadata?.().then((meta) => {
+      if (cancelled) return;
+      setWebShellEnabled(Boolean(meta?.webShellEnabled));
+    }).catch(() => {
+      // best-effort: leave flag off when metadata unavailable
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const appsById = useMemo(() => {
+    const map = new Map<string, StreamingLaunchInputApp>();
+    for (const a of appsQuery.data?.items ?? []) {
+      map.set(a.id, {
+        id: a.id,
+        type: a.type,
+        launchUrl: a.launchUrl,
+        chromeProfileSegment: a.chromeProfileSegment,
+      });
+    }
+    return map;
+  }, [appsQuery.data?.items]);
+
+  const resolveApp = useCallback(
+    (appId: string) => appsById.get(appId) ?? null,
+    [appsById],
+  );
+
   const selectSidebarNav = useCallback(
     (navId: string) => {
       const idx = feedHome.nav.findIndex((n) => n.id === navId);
@@ -83,6 +118,8 @@ export function LauncherPage() {
         return;
       }
       void launchAppTileIfActivated(payload, {
+        webShellEnabled,
+        resolveApp,
         onLaunchSucceeded: () => {
           void queryClient.invalidateQueries({ queryKey: ["api", "apps"] });
           void queryClient.invalidateQueries({ queryKey: ["api", "watch", "continue"] });
@@ -91,7 +128,7 @@ export function LauncherPage() {
         },
       });
     },
-    [queryClient, selectSidebarNav],
+    [queryClient, selectSidebarNav, webShellEnabled, resolveApp],
   );
 
   const activateTileById = useCallback(
@@ -143,8 +180,10 @@ export function LauncherPage() {
   }, []);
 
   return (
-    <AppShell
-      sidebar={
+    <>
+      <WebShellTopBar />
+      <AppShell
+        sidebar={
         <Sidebar
           items={feedHome.nav}
           section={focus.section}
@@ -185,6 +224,7 @@ export function LauncherPage() {
           ))}
         </ContentRow>
       ))}
-    </AppShell>
+      </AppShell>
+    </>
   );
 }

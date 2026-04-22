@@ -2,6 +2,10 @@ import type { FocusActivatePayload } from "@/hooks/useFocusInputDispatch.ts";
 import { getApiBaseUrl } from "@/api/client.ts";
 import { useFocusStore } from "@/store/focusStore.ts";
 import { useLaunchFeedbackStore } from "@/store/launchFeedbackStore.ts";
+import {
+  decideStreamingLaunchRoute,
+  type StreamingLaunchInputApp,
+} from "@/player/streamingLaunchRoute.ts";
 
 /** Tile ids that map to seeded `apps` rows (`POST /api/v1/launch`). */
 const LAUNCH_APP_TILE_IDS = new Set<string>(["launch-streaming-demo", "launch-mpv-demo"]);
@@ -12,6 +16,18 @@ const APP_TILE_PREFIX = "app:";
 export interface LaunchTileActivateOptions {
   /** Called after a successful IPC launch (e.g. refresh apps query). */
   onLaunchSucceeded?: () => void;
+  /**
+   * Resolve seeded `apps` row metadata (type, launchUrl, chromeProfileSegment) used to
+   * pick the in-window `web-shell` route vs the legacy external-Chrome launch.
+   * If not provided or it returns `null`, the external path is used. SAM-64.
+   */
+  resolveApp?: (appId: string) => StreamingLaunchInputApp | null;
+  /**
+   * Feature flag snapshot: if the preload bridge reports `webShellEnabled: true`, pass
+   * `true` here so the routing function can consider the in-window path. Default `false`
+   * keeps legacy behavior.
+   */
+  webShellEnabled?: boolean;
 }
 
 type LaunchResultDto = { ok: true; sessionId?: string; pid?: number } | { ok: false; reason?: string };
@@ -74,6 +90,49 @@ export async function launchAppTileIfActivated(
   useFocusStore.getState().requestShellFocusRestore();
   const launch = window.orangeTv?.launchRequest;
   const feedback = useLaunchFeedbackStore.getState().setOutcome;
+
+  // SAM-64: consider the in-window web-shell route before falling through to external launch.
+  if (!isMediaTile) {
+    const appId = isPrefixedApp ? payload.id.slice(APP_TILE_PREFIX.length) : payload.id;
+    const app = options?.resolveApp?.(appId) ?? null;
+    const openWebShell = window.orangeTv?.openWebShell;
+    if (app && openWebShell) {
+      const route = decideStreamingLaunchRoute(app, options?.webShellEnabled ?? false);
+      console.info(
+        `[launcher] streaming route for "${appId}":`,
+        route.mode,
+        route.mode === "external"
+          ? `(webShellEnabled=${options?.webShellEnabled ?? false}, type=${app.type}, launchUrl=${app.launchUrl ? "set" : "empty"})`
+          : "",
+      );
+      if (route.mode === "web-shell") {
+        try {
+          const result = await openWebShell({
+            url: route.url,
+            appId: route.appId,
+            chromeProfileSegment: route.chromeProfileSegment,
+          });
+          if (result.ok) {
+            feedback(true);
+            options?.onLaunchSucceeded?.();
+            return;
+          }
+          console.warn(
+            `[launcher] openWebShell ok:false (${result.reason ?? "no reason"}); falling back to external launch. Set ORANGETV_ELECTRON__WEB_SHELL_ENABLED=1 to enable in-window streaming.`,
+          );
+        } catch (e) {
+          console.warn("[launcher] openWebShell threw; falling back to external launch", e);
+        }
+      }
+    } else if (!openWebShell) {
+      console.info("[launcher] openWebShell bridge missing (not under Electron preload)");
+    } else if (!app) {
+      console.info(
+        `[launcher] streaming tile "${appId}" has no matching apps row; using external launch`,
+      );
+    }
+  }
+
   if (!launch) {
     if (!import.meta.env.DEV) {
       console.error("[launcher] launchRequest unavailable (not running under Electron preload)");

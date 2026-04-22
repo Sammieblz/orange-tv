@@ -48,7 +48,38 @@ function validateWindowFullscreenPayload(payload) {
   return { valid: true, fullscreen };
 }
 
+/**
+ * @typedef {{ valid: false, reason: string } |
+ *   { valid: true, url: string, appId: string, chromeProfileSegment: string | null }} WebShellOpenPayloadResult
+ *
+ * @param {unknown} payload
+ * @returns {WebShellOpenPayloadResult}
+ */
+function validateWebShellOpenPayload(payload) {
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    return { valid: false, reason: "invalid-payload" };
+  }
+  const p = /** @type {{ url?: unknown; appId?: unknown; chromeProfileSegment?: unknown }} */ (
+    payload
+  );
+  if (typeof p.url !== "string" || p.url.length === 0 || p.url.length > 2048) {
+    return { valid: false, reason: "invalid-url" };
+  }
+  if (typeof p.appId !== "string" || p.appId.length === 0 || p.appId.length > 256) {
+    return { valid: false, reason: "invalid-appid" };
+  }
+  let segment = null;
+  if (p.chromeProfileSegment !== undefined && p.chromeProfileSegment !== null) {
+    if (typeof p.chromeProfileSegment !== "string" || p.chromeProfileSegment.length > 128) {
+      return { valid: false, reason: "invalid-segment" };
+    }
+    segment = p.chromeProfileSegment;
+  }
+  return { valid: true, url: p.url, appId: p.appId, chromeProfileSegment: segment };
+}
+
 module.exports = {
   validateLaunchPayload,
   validateWindowFullscreenPayload,
+  validateWebShellOpenPayload,
 };

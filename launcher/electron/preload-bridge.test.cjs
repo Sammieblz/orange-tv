@@ -22,21 +22,9 @@ describe("createOrangeTvBridge", () => {
     /** @type {string[]} */
     const invoked = [];
     const ipcRenderer = {
-      invoke: (channel, payload) => {
+      invoke: (channel) => {
         invoked.push(channel);
-        if (channel === CHANNELS.PING) {
-          return Promise.resolve("pong");
-        }
-        if (channel === CHANNELS.LAUNCH_REQUEST) {
-          return Promise.resolve({ ok: true });
-        }
-        if (channel === CHANNELS.WINDOW_SET_FULLSCREEN) {
-          return Promise.resolve({ ok: true });
-        }
-        if (channel === CHANNELS.SHELL_FOCUS) {
-          return Promise.resolve({ ok: true });
-        }
-        return Promise.resolve(undefined);
+        return Promise.resolve({ ok: true });
       },
       on: () => {},
       removeListener: () => {},
@@ -49,11 +37,15 @@ describe("createOrangeTvBridge", () => {
     await bridge.ping();
     await bridge.launchRequest({ kind: "app", id: "launch-streaming-demo" });
     await bridge.setFullscreen(true);
+    await bridge.openWebShell({ url: "https://netflix.com", appId: "netflix" });
+    await bridge.closeWebShell();
 
     assert.deepStrictEqual(invoked, [
       CHANNELS.PING,
       CHANNELS.LAUNCH_REQUEST,
       CHANNELS.WINDOW_SET_FULLSCREEN,
+      CHANNELS.WEB_SHELL_OPEN,
+      CHANNELS.WEB_SHELL_CLOSE,
     ]);
     for (const ch of invoked) {
       assert.ok(RENDERER_INVOKE_CHANNELS.includes(ch));
@@ -93,8 +85,44 @@ describe("createOrangeTvBridge", () => {
 });
 
 describe("ORANGE_TV_BRIDGE_KEYS", () => {
-  it("is frozen and stable length", () => {
+  it("is frozen and stable length (6 legacy + 3 web-shell = 9)", () => {
     assert.ok(Object.isFrozen(ORANGE_TV_BRIDGE_KEYS));
-    assert.strictEqual(ORANGE_TV_BRIDGE_KEYS.length, 6);
+    assert.strictEqual(ORANGE_TV_BRIDGE_KEYS.length, 9);
+  });
+
+  it("includes the web-shell bridge methods (SAM-63)", () => {
+    assert.ok(ORANGE_TV_BRIDGE_KEYS.includes("openWebShell"));
+    assert.ok(ORANGE_TV_BRIDGE_KEYS.includes("closeWebShell"));
+    assert.ok(ORANGE_TV_BRIDGE_KEYS.includes("onWebShellState"));
+  });
+});
+
+describe("web-shell bridge — push channel subscription (SAM-63)", () => {
+  it("onWebShellState subscribes on WEB_SHELL_STATE and passes the state payload", () => {
+    /** @type {Array<[string, Function]>} */
+    const subs = [];
+    const ipcRenderer = {
+      invoke: () => Promise.resolve(),
+      on: (channel, listener) => {
+        subs.push([channel, listener]);
+      },
+      removeListener: (channel, listener) => {
+        const i = subs.findIndex((s) => s[0] === channel && s[1] === listener);
+        if (i >= 0) subs.splice(i, 1);
+      },
+    };
+    const shellProfile = { getRuntimeMetadataPayload: () => ({}) };
+    const bridge = createOrangeTvBridge(ipcRenderer, shellProfile);
+    /** @type {unknown[]} */
+    const received = [];
+    const unsub = bridge.onWebShellState((s) => {
+      received.push(s);
+    });
+    assert.strictEqual(subs.length, 1);
+    assert.strictEqual(subs[0][0], CHANNELS.WEB_SHELL_STATE);
+    subs[0][1]({}, { open: true, appId: "netflix" });
+    assert.deepStrictEqual(received, [{ open: true, appId: "netflix" }]);
+    unsub();
+    assert.strictEqual(subs.length, 0);
   });
 });

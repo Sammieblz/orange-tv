@@ -90,6 +90,7 @@ Deep dive: [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md
 
 - **OS-wide lock** (e.g. Alt+Tab) vs **shell** lock: see [`electron-shell.md`](electron-shell.md) → *OS-wide lock vs shell lock* (canonical explanation).
 - **Linux / macOS:** `minimize` / `foreground` return **501** until implemented; **`GET .../sessions/active`** still lists rows. Details: [`launch-sessions-and-windowing.md`](launch-sessions-and-windowing.md).
+- **In-window streaming (SAM-61):** set **`ORANGETV_ELECTRON__WEB_SHELL_ENABLED=1`** to route streaming tiles through an Electron `BrowserView` inside the launcher window instead of spawning Chrome. See [`player-and-streaming-strategy.md`](player-and-streaming-strategy.md) → *Streaming shell — BrowserView wiring*.
 
 **Chrome profiles:** the **`launcher.chrome.profilesRoot`** setting (via **`PUT /api/v1/settings/launcher.chrome.profilesRoot`**) overrides the env default for where profile segment folders live. Backup and DB-vs-profile confusion are documented in [`chrome-profiles-and-backup.md`](chrome-profiles-and-backup.md).
 

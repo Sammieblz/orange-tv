@@ -102,14 +102,53 @@ Until Orange Player replaces the orchestrated MPV path entirely, the existing "s
 
 The dock's "Minimize → `focusShell()`" behavior in [`RunningAppsDock.tsx`](../launcher/src/components/RunningAppsDock/RunningAppsDock.tsx) is unchanged and remains the canonical return-to-shell path.
 
-## Streaming shell — BrowserView container (SAM-60, SAM-57 — scaffolded)
+## Streaming shell — BrowserView wiring (SAM-61 — shipped)
 
-The in-Electron container for streaming tiles is scaffolded as **pure Electron-free modules** so it can be tested with `node --test` before any `BrowserView` code lands in `main.cjs`:
+Streaming tiles render as an in-Electron **`BrowserView`** attached to the shell window **by default** — no separate Chrome process, no title bar, no taskbar entry, no drag-out. The in-window path is controlled by **`ORANGETV_ELECTRON__WEB_SHELL_ENABLED`**; set it to `0` or `false` to fall back to the legacy external-Chrome path for debugging.
 
-- Geometry / URL allow-list / key capture: [`launcher/electron/web-shell-container.cjs`](../launcher/electron/web-shell-container.cjs) (tests: `web-shell-container.test.cjs`).
-- **Per-tile persistent profile partitions** (SAM-57): [`launcher/electron/web-shell-profile.cjs`](../launcher/electron/web-shell-profile.cjs) (tests: `web-shell-profile.test.cjs`). Mirrors the sanitization rules in [`api/Launch/ChromeProfilePaths.cs`](../api/Launch/ChromeProfilePaths.cs) so an Electron `session.fromPartition('persist:<segment>')` stays aligned with the Chrome `--user-data-dir` segment used today. Two apps that share a `chromeProfileSegment` share one persistent session.
+**Runtime hardening (applied to every streaming BrowserView):**
 
-Both modules are wired into `npm run test:electron` (see [`launcher/package.json`](../launcher/package.json)).
+- **User-agent normalized** via [`web-shell-useragent.cjs`](../launcher/electron/web-shell-useragent.cjs) so sites do not see `Electron/<version>` and throw "download our app" modals.
+- **`window.open` / `target="_blank"` denied** via `webContents.setWindowOpenHandler` — nothing can escape as a second OS window.
+- **Top 44px inset** reserved for the launcher's [`WebShellTopBar`](../launcher/src/player/WebShellTopBar.tsx), a discoverable Back control that renders over the shell window whenever a BrowserView is active. Escape / Backspace / Home still work via `classifyWebShellKey`.
+
+**Startup logs:** when the in-window path is active, main logs `INFO app ready { ..., "webShellEnabled": true }` + `INFO web_shell_enabled`; the renderer DevTools console logs each tile's routing decision (`web-shell` vs `external`).
+
+### Architecture
+
+| Layer | Source |
+| --- | --- |
+| **Pure geometry / URL allow-list / key guard** | [`launcher/electron/web-shell-container.cjs`](../launcher/electron/web-shell-container.cjs) |
+| **Per-tile persistent partitions** (mirrors `ChromeProfilePaths.SanitizeSegment`) | [`launcher/electron/web-shell-profile.cjs`](../launcher/electron/web-shell-profile.cjs) |
+| **Lifecycle state machine (DI-friendly, no Electron import)** | [`launcher/electron/web-shell-manager.cjs`](../launcher/electron/web-shell-manager.cjs) |
+| **Electron glue (main.cjs)** | `createElectronWebShellDeps` + IPC handlers in [`launcher/electron/main.cjs`](../launcher/electron/main.cjs) |
+| **IPC channels** | `WEB_SHELL_OPEN` / `WEB_SHELL_CLOSE` / `WEB_SHELL_STATE` in [`launcher/electron/ipc-contract.cjs`](../launcher/electron/ipc-contract.cjs) |
+| **Payload validation** | `validateWebShellOpenPayload` in [`launcher/electron/ipc-payload.cjs`](../launcher/electron/ipc-payload.cjs) |
+| **Preload bridge** | `openWebShell` / `closeWebShell` / `onWebShellState` in [`launcher/electron/preload-bridge.cjs`](../launcher/electron/preload-bridge.cjs) |
+| **Renderer route decision** | `decideStreamingLaunchRoute` in [`launcher/src/player/streamingLaunchRoute.ts`](../launcher/src/player/streamingLaunchRoute.ts) |
+| **Renderer hook** | `useWebShell` / `useWebShellState` in [`launcher/src/player/useWebShell.ts`](../launcher/src/player/useWebShell.ts) |
+| **Tile integration** | `launchAppTileIfActivated` + `LauncherPage` pass `webShellEnabled` + `resolveApp` ([`launcher/src/launchFromTileActivate.ts`](../launcher/src/launchFromTileActivate.ts), [`launcher/src/LauncherPage.tsx`](../launcher/src/LauncherPage.tsx)) |
+
+### Flow
+
+1. On startup the launcher calls `window.orangeTv.getRuntimeMetadata()` and reads `webShellEnabled`.
+2. When a streaming tile is activated, `decideStreamingLaunchRoute` inspects the app record (type = `chrome`, non-empty `launchUrl`). On `web-shell`, the renderer calls `window.orangeTv.openWebShell(...)`.
+3. Main validates the payload, resolves the `persist:<segment>` session, creates a `BrowserView` inside the shell window, applies fullscreen bounds, installs the `before-input-event` key guard, and loads the URL. State is broadcast to the renderer on `WEB_SHELL_STATE`.
+4. `Escape` / `Backspace` / `Home` / `ContextMenu` inside the view are captured, close the view, and refocus the shell — never stranding the user inside streaming content.
+5. If the flag is **off**, `openWebShell` returns `web-shell-disabled` and the launcher transparently falls back to the legacy `POST /api/v1/launch` → external Chrome path.
+
+### Key rule
+
+**Chromium stays.** Orange TV does not replace the browser engine — commercial streamers require Widevine DRM which only ships in Chromium/Chromecast/Firefox. The win here is that the Chromium surface lives **inside** Orange TV's window (fullscreen, Back-captured, per-tile session), not as a spawned separate desktop application.
+
+### Tests (all wired into `npm run test:electron` / `npm test`)
+
+- `web-shell-manager.test.cjs` — 14 cases covering open/close/resize/partition/key-guard/error paths/dispose
+- `web-shell-container.test.cjs`, `web-shell-profile.test.cjs` — lower-level pure modules
+- `ipc-payload.test.cjs` — adds `validateWebShellOpenPayload` coverage
+- `ipc-contract.test.cjs`, `preload-bridge.test.cjs` — contract + new bridge keys
+- `streamingLaunchRoute.test.ts` — pure decision function (8 cases)
+- `launchFromTileActivate.test.ts` — integration: web-shell path wins on flag-on, falls back on flag-off / `ok:false` / thrown errors
 
 ---
 

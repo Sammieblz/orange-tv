@@ -83,6 +83,18 @@ This checklist assumes **`npm run dev` runs inside the Ubuntu VM** (native Linux
 
 **VM limitation:** Focus stacking under Wayland vs X11 may differ from **hardware + TV**.
 
+### In-window streaming shell (BrowserView, SAM-61)
+
+Run once with `ORANGETV_ELECTRON__WEB_SHELL_ENABLED=1 npm run dev:electron` (Electron is required; BrowserView does not apply to browser-only dev).
+
+- [ ] Activating a seeded **streaming tile** (e.g. `netflix`, `prime-video`, `disney-plus`, `youtube`) opens a `BrowserView` **inside** the Orange TV window — **no** separate Chrome window appears, and the Orange TV title bar / fullscreen frame is still visible.
+- [ ] **Escape** / **Backspace** inside the view closes the `BrowserView` and returns focus to the launcher home grid within ~1 second.
+- [ ] Open the same tile again: the session persists (e.g. still signed in to the streaming service, or still on the last-visited page per Chromium session partition).
+- [ ] Open a different streaming tile while one is already open: the previous view is closed before the new one attaches (only one active web-shell at a time).
+- [ ] With **`ORANGETV_ELECTRON__WEB_SHELL_ENABLED`** unset, the same tile falls back to the legacy external-Chrome path (a separate Chrome window opens via `POST /api/v1/launch`).
+
+**VM limitation:** DRM-protected streams may or may not play in a Linux VM depending on the Chromium Widevine CDM availability; test content selection matters more than pass/fail here.
+
 ### Config persistence
 
 - [ ] Change a **documented** setting (or env-driven flag) and restart API + launcher; value **persists** on disk under Linux paths.

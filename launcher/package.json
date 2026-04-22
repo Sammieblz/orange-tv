@@ -9,6 +9,7 @@
     "electron": "cross-env ELECTRON_IS_DEV=1 electron .",
     "electron:prod": "electron .",
     "dev:electron": "concurrently -k -n vite,electron -c cyan,green \"npm run dev\" \"wait-on http-get://127.0.0.1:5173 && npm run electron\"",
+    "dev:electron:webshell": "concurrently -k -n vite,electron -c cyan,green \"npm run dev\" \"wait-on http-get://127.0.0.1:5173 && cross-env ORANGETV_ELECTRON__WEB_SHELL_ENABLED=1 npm run electron\"",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "node ./node_modules/eslint/bin/eslint.js . --fix",
     "format": "node ./node_modules/prettier/bin/prettier.cjs . --write",
@@ -18,7 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:electron": "node --test electron/shell-profile.test.cjs electron/window-lifecycle.test.cjs electron/window-fullscreen-kiosk-guard.test.cjs electron/ipc-payload.test.cjs electron/ipc-contract.test.cjs electron/preload-bridge.test.cjs electron/web-shell-container.test.cjs electron/web-shell-profile.test.cjs"
+    "test:electron": "node --test electron/shell-profile.test.cjs electron/window-lifecycle.test.cjs electron/window-fullscreen-kiosk-guard.test.cjs electron/ipc-payload.test.cjs electron/ipc-contract.test.cjs electron/preload-bridge.test.cjs electron/web-shell-container.test.cjs electron/web-shell-profile.test.cjs electron/web-shell-manager.test.cjs electron/web-shell-useragent.test.cjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

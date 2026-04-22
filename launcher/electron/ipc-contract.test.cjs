@@ -13,6 +13,9 @@ describe("CHANNELS", () => {
     assert.strictEqual(CHANNELS.SHELL_FOREGROUND, "orange-tv:shell-foreground");
     assert.strictEqual(CHANNELS.WINDOW_SET_FULLSCREEN, "orange-tv:window-set-fullscreen");
     assert.strictEqual(CHANNELS.SHELL_FOCUS, "orange-tv:shell-focus");
+    assert.strictEqual(CHANNELS.WEB_SHELL_OPEN, "orange-tv:web-shell-open");
+    assert.strictEqual(CHANNELS.WEB_SHELL_CLOSE, "orange-tv:web-shell-close");
+    assert.strictEqual(CHANNELS.WEB_SHELL_STATE, "orange-tv:web-shell-state");
   });
 
   it("uses unique values", () => {
@@ -28,6 +31,13 @@ describe("RENDERER_INVOKE_CHANNELS", () => {
       CHANNELS.LAUNCH_REQUEST,
       CHANNELS.WINDOW_SET_FULLSCREEN,
       CHANNELS.SHELL_FOCUS,
+      CHANNELS.WEB_SHELL_OPEN,
+      CHANNELS.WEB_SHELL_CLOSE,
     ]);
+  });
+
+  it("does not expose the main->renderer push channel for invoke", () => {
+    assert.ok(!RENDERER_INVOKE_CHANNELS.includes(CHANNELS.WEB_SHELL_STATE));
+    assert.ok(!RENDERER_INVOKE_CHANNELS.includes(CHANNELS.SHELL_FOREGROUND));
   });
 });
