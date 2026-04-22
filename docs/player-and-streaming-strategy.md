@@ -57,15 +57,59 @@ Commercial streamers do **not** expose a small-indie “embed Netflix in my grid
 
 ---
 
-## Unified TV controls (SAM-53)
+## Unified TV controls (SAM-53 / SAM-58 — shipped)
 
-Define a **single contract** (document + tests):
+The contract is codified as a **pure module** plus unit tests and consumed by the launcher, Orange Player, and the future web-shell:
 
-- Which keys / gamepad actions apply in **launcher grid**, **Orange Player**, and **streaming web**.
-- What happens on **Back** in each mode.
-- When focus is **delegated** to web content vs **captured** by the shell (and known failure modes).
+- **Module:** [`launcher/src/navigation/tvControlsContract.ts`](../launcher/src/navigation/tvControlsContract.ts)
+- **Tests:** [`launcher/src/navigation/tvControlsContract.test.ts`](../launcher/src/navigation/tvControlsContract.test.ts)
+- Related DOM / gamepad wiring: [`focus-navigation.md`](focus-navigation.md), [`gamepad-focus-recovery.md`](gamepad-focus-recovery.md).
 
-Reuse and extend [`focus-navigation.md`](focus-navigation.md) and [`gamepad-focus-recovery.md`](gamepad-focus-recovery.md).
+### Surfaces × actions
+
+| Action | `launcher` | `player` | `web-shell` |
+| --- | --- | --- | --- |
+| `up` / `down` / `left` / `right` | **shell** | **shell** | delegated |
+| `confirm` | **shell** | **shell** | delegated |
+| `back` | **shell** (→ sidebar) | **shell** (→ launcher) | **shell** (→ launcher) |
+| `play-pause` / `seek-forward` / `seek-back` | ignored | **shell** | delegated |
+| `home` / `menu` | **shell** | **shell** | **shell** |
+
+- **shell** = Orange TV handles the key itself.
+- **delegated** = key is forwarded to the embedded page / video element.
+- **ignored** = deliberately a no-op on that surface.
+
+The rule for the web-shell is **"delegate content keys, always capture Back and Home"** so the user can never be stranded inside a streaming site.
+
+## Orange Player — `<video>` spike (SAM-56 — shipped)
+
+Implementation:
+
+- Reducer: [`launcher/src/player/orangePlayerReducer.ts`](../launcher/src/player/orangePlayerReducer.ts) — pure state machine for `idle → loading → playing/paused/ended/error`, seek clamping, and TV-action → player-event mapping.
+- Component: [`launcher/src/player/OrangePlayer.tsx`](../launcher/src/player/OrangePlayer.tsx) — HTML5 `<video>` inside a focused region; consumes `tvControlsContract` to decide which keys to capture vs let through.
+- Tests: [`launcher/src/player/orangePlayerReducer.test.ts`](../launcher/src/player/orangePlayerReducer.test.ts), [`launcher/src/player/OrangePlayer.test.tsx`](../launcher/src/player/OrangePlayer.test.tsx).
+
+Limits: codec support is whatever Electron's Chromium provides; DRM is **not** a goal here. For the recommendation about libmpv / helper-process extensions, see [`libmpv-feasibility.md`](libmpv-feasibility.md) (SAM-55).
+
+## MPV stepping stone (SAM-59 — shipped)
+
+Until Orange Player replaces the orchestrated MPV path entirely, the existing "spawn MPV as a child process" flow is hardened:
+
+- [`launcher/src/launchFromTileActivate.ts`](../launcher/src/launchFromTileActivate.ts) now **clears the pending shell-focus checkpoint on launch failure** so a failed launch cannot leave a stale `focusCheckpoint` that would be silently consumed by a later unrelated window-focus event.
+- New unit coverage in [`launcher/src/launchFromTileActivate.test.ts`](../launcher/src/launchFromTileActivate.test.ts) asserts:
+  - success path keeps the checkpoint armed,
+  - `ok: false` and thrown-error paths clear the checkpoint.
+
+The dock's "Minimize → `focusShell()`" behavior in [`RunningAppsDock.tsx`](../launcher/src/components/RunningAppsDock/RunningAppsDock.tsx) is unchanged and remains the canonical return-to-shell path.
+
+## Streaming shell — BrowserView container (SAM-60, SAM-57 — scaffolded)
+
+The in-Electron container for streaming tiles is scaffolded as **pure Electron-free modules** so it can be tested with `node --test` before any `BrowserView` code lands in `main.cjs`:
+
+- Geometry / URL allow-list / key capture: [`launcher/electron/web-shell-container.cjs`](../launcher/electron/web-shell-container.cjs) (tests: `web-shell-container.test.cjs`).
+- **Per-tile persistent profile partitions** (SAM-57): [`launcher/electron/web-shell-profile.cjs`](../launcher/electron/web-shell-profile.cjs) (tests: `web-shell-profile.test.cjs`). Mirrors the sanitization rules in [`api/Launch/ChromeProfilePaths.cs`](../api/Launch/ChromeProfilePaths.cs) so an Electron `session.fromPartition('persist:<segment>')` stays aligned with the Chrome `--user-data-dir` segment used today. Two apps that share a `chromeProfileSegment` share one persistent session.
+
+Both modules are wired into `npm run test:electron` (see [`launcher/package.json`](../launcher/package.json)).
 
 ---
 

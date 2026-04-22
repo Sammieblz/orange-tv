@@ -21,7 +21,7 @@ Read **environment variables, HTTP API list, and BrowserShell** in [`docs/enviro
 | **Long-form plan, delivery, data model, MVP status** | [`docs/project-plan.md`](docs/project-plan.md) |
 | **Focus, gamepad** | [`docs/focus-navigation.md`](docs/focus-navigation.md), [`docs/gamepad-focus-recovery.md`](docs/gamepad-focus-recovery.md) |
 | **Chrome profiles, media library, watch history, recommendations** | [`docs/chrome-profiles-and-backup.md`](docs/chrome-profiles-and-backup.md), [`docs/media-library.md`](docs/media-library.md), [`docs/watch-history.md`](docs/watch-history.md), [`docs/recommendations-rules.md`](docs/recommendations-rules.md) |
-| **Orange Player + in-shell streaming (roadmap)** | [`docs/player-and-streaming-strategy.md`](docs/player-and-streaming-strategy.md) — Linear epic [SAM-50](https://linear.app/samspot/issue/SAM-50/orange-tv-in-shell-player-streaming-roku-style-ux) |
+| **Orange Player + in-shell streaming (roadmap)** | [`docs/player-and-streaming-strategy.md`](docs/player-and-streaming-strategy.md), [`docs/libmpv-feasibility.md`](docs/libmpv-feasibility.md) — Linear epic [SAM-50](https://linear.app/samspot/issue/SAM-50/orange-tv-in-shell-player-streaming-roku-style-ux) |
 
 ## Tooling and quality
 

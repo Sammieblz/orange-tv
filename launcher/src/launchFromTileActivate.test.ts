@@ -69,6 +69,47 @@ describe("launchAppTileIfActivated", () => {
     expect(useLaunchFeedbackStore.getState().line).toContain("app-not-found");
   });
 
+  it("clears the stale focus checkpoint when the IPC launch returns ok false (SAM-59)", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: false as const, reason: "chrome-not-found" }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+
+    await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" });
+
+    const state = useFocusStore.getState();
+    expect(state.focusCheckpoint).toBeNull();
+    expect(state.shellRestorePending).toBe(false);
+  });
+
+  it("clears the stale focus checkpoint when the IPC launch throws (SAM-59)", async () => {
+    const launchRequest = vi.fn(async () => {
+      throw new Error("bridge-crashed");
+    });
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+
+    await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" });
+
+    const state = useFocusStore.getState();
+    expect(state.focusCheckpoint).toBeNull();
+    expect(state.shellRestorePending).toBe(false);
+    expect(useLaunchFeedbackStore.getState().variant).toBe("error");
+  });
+
+  it("does NOT clear the focus checkpoint on successful launch (shell-return still armed)", async () => {
+    const launchRequest = vi.fn(async () => ({ ok: true as const, sessionId: "abc", pid: 42 }));
+    (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {
+      launchRequest,
+    };
+    const clearSpy = vi.spyOn(useFocusStore.getState(), "clearFocusCheckpoint");
+
+    await launchAppTileIfActivated({ context: "tile", id: "launch-streaming-demo" });
+
+    expect(clearSpy).not.toHaveBeenCalled();
+  });
+
   it("launches app-prefixed tiles", async () => {
     const launchRequest = vi.fn(async () => ({ ok: true as const }));
     (window as unknown as { orangeTv: { launchRequest: typeof launchRequest } }).orangeTv = {

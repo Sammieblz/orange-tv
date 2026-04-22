@@ -89,6 +89,7 @@ export async function launchAppTileIfActivated(
           });
       if (!result.ok) {
         console.error("[launcher] launch failed", result.reason ?? "(no reason)");
+        useFocusStore.getState().clearFocusCheckpoint();
         feedback(false, result.reason);
         return;
       }
@@ -96,6 +97,7 @@ export async function launchAppTileIfActivated(
       options?.onLaunchSucceeded?.();
     } catch (e) {
       console.error("[launcher] launch error", e);
+      useFocusStore.getState().clearFocusCheckpoint();
       feedback(false, e instanceof Error ? e.message : "network-error");
     }
     return;
@@ -112,6 +114,7 @@ export async function launchAppTileIfActivated(
         });
     if (!result.ok) {
       console.error("[launcher] launch failed", result.reason ?? "(no reason)");
+      useFocusStore.getState().clearFocusCheckpoint();
       feedback(false, result.reason);
       return;
     }
@@ -119,6 +122,7 @@ export async function launchAppTileIfActivated(
     options?.onLaunchSucceeded?.();
   } catch (e) {
     console.error("[launcher] launch error", e);
+    useFocusStore.getState().clearFocusCheckpoint();
     feedback(false, e instanceof Error ? e.message : "network-error");
   }
 }
