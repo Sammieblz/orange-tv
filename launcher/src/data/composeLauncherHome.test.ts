@@ -21,6 +21,7 @@ describe("composeLauncherHome", () => {
           },
         ],
       },
+      recommendationsStatus: "success",
       apps: [
         {
           id: "netflix",

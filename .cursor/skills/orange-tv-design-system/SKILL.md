@@ -57,7 +57,7 @@ When regenerating the persisted design system, keep **`MASTER.md`** aligned with
 
 ## Backend (`api/`) — code standards
 
-- **Stack:** ASP.NET Core **Minimal API** (see [`api/Program.cs`](../../../api/Program.cs)), **.NET 9** TFM in [`api/OrangeTv.Api.csproj`](../../../api/OrangeTv.Api.csproj), EF Core + SQLite, Serilog.
+- **Stack:** ASP.NET Core **Minimal API** (see [`api/Program.cs`](../../../api/Program.cs)), **.NET 10 LTS** TFM in [`api/OrangeTv.Api.csproj`](../../../api/OrangeTv.Api.csproj), EF Core + SQLite, Serilog.
 - **Structure:** Endpoints in `api/Endpoints/` (or grouped by feature), services in `api/Services/`, platform abstractions in `api/Platform/`, configuration via `OrangetvApiOptions` and `appsettings` + env vars with **`ORANGETV_API__...`** (see `docs/environment.md`).
 - **Style:** C# with **4-space** indent per [`.editorconfig`](../../../.editorconfig); `Nullable` enable; `ImplicitUsings` on the project; prefer clear names over abbreviations; async with `ConfigureAwait` where the codebase already does for DB paths.
 - **Migrations:** After model changes, add EF migrations and ensure startup applies them per [`CONTRIBUTING.md`](../../../CONTRIBUTING.md).

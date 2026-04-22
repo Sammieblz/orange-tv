@@ -55,18 +55,29 @@ public static class BrowserShellExecutableCandidates
 
         if (!string.IsNullOrWhiteSpace(programFiles))
         {
-            yield return Path.Combine(programFiles, "Google", "Chrome", "Application", "chrome.exe");
+            yield return CombineWindowsChromePath(programFiles);
         }
 
         if (!string.IsNullOrWhiteSpace(programFilesX86))
         {
-            yield return Path.Combine(programFilesX86, "Google", "Chrome", "Application", "chrome.exe");
+            yield return CombineWindowsChromePath(programFilesX86);
         }
 
         if (!string.IsNullOrWhiteSpace(localAppData))
         {
-            yield return Path.Combine(localAppData, "Google", "Chrome", "Application", "chrome.exe");
+            yield return CombineWindowsChromePath(localAppData);
         }
+    }
+
+    private static string CombineWindowsChromePath(string root)
+    {
+        return string.Join(
+            '\\',
+            root.TrimEnd('\\', '/'),
+            "Google",
+            "Chrome",
+            "Application",
+            "chrome.exe");
     }
 
     internal static IEnumerable<string> EnumerateLinux()

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using OrangeTv.Api;
 using OrangeTv.Api.Configuration;
@@ -12,6 +13,17 @@ using OrangeTv.Api.Shell;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    DotEnvLoader.LoadNearest();
+    builder.Configuration.AddEnvironmentVariables();
+}
+
+var configuredUrls = builder.Configuration[$"{OrangetvApiOptions.SectionName}:Urls"];
+if (!string.IsNullOrWhiteSpace(configuredUrls))
+{
+    builder.WebHost.UseUrls(configuredUrls);
+}
 
 builder.Host.UseSerilog(
     (context, services, configuration) =>
@@ -45,7 +57,7 @@ builder.Services.AddDbContext<OrangeTvDbContext>(
     });
 
 builder.Services.AddSingleton<IPlatformEnvironment, PlatformEnvironment>();
-builder.Services.Configure<BrowserShellOptions>(builder.Configuration.GetSection(BrowserShellOptions.SectionName));
+builder.Services.ConfigureBrowserShellOptions(builder.Configuration);
 builder.Services.AddHostedService<ChromiumShellHostedService>();
 builder.Services.AddSingleton<WatchAggregationService>();
 builder.Services.AddSingleton<WatchHistoryWriteHelper>();

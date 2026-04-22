@@ -61,7 +61,9 @@ public static class ChromeProfilePaths
 
     public static string SanitizeSegment(string value)
     {
-        var invalid = Path.GetInvalidFileNameChars();
+        var invalid = Path.GetInvalidFileNameChars()
+            .Concat(new[] { '<', '>', ':', '"', '/', '\\', '|', '?', '*' })
+            .ToHashSet();
         var chars = value.Select(c => invalid.Contains(c) ? '_' : c).ToArray();
         var s = new string(chars).Trim();
         if (string.IsNullOrEmpty(s))

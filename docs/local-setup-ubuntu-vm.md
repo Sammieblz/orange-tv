@@ -101,7 +101,7 @@ Details: [`environment.md`](environment.md), [`electron-shell.md`](electron-shel
 ## Environment and data paths (Ubuntu)
 
 - Copy **`.env.example`** to **`.env`** for overrides; see [`environment.md`](environment.md).
-- **SQLite** example for Linux is already in `.env.example` (`/var/lib/orange-tv/...`); create the directory and permissions to match how you run the API.
+- For local development, keep the SQLite path under your home directory (for example `/home/<user>/.local/share/OrangeTv/orange-tv.db`). Use `/var/lib/orange-tv/...` only for a packaged/service-style install after creating the directory with the right owner.
 - **BrowserShell profile and launch state** default under the .NET user data root (typically **`~/.local/share/OrangeTv/`** on Linux when `SpecialFolder.LocalApplicationData` maps to XDG). Useful if you need to clear a stuck shell state.
 
 ## Testing from the Ubuntu machine

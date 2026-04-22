@@ -12,6 +12,8 @@ Recommended workflow:
 1. Copy `.env.example` to `.env` (optional; only if you need overrides).
 2. Override values locally without changing tracked files.
 
+The API loads the nearest `.env` file at startup outside the `Testing` environment; already-exported shell variables take precedence over `.env` values. The launcher Vite config reads the repo-root `.env` via `envDir`, so `VITE_ORANGETV_*` values can live next to the backend settings.
+
 ## Frontend (Vite) conventions
 
 Vite only exposes variables to the browser when they are prefixed with `VITE_`.

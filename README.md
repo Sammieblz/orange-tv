@@ -7,7 +7,7 @@
 - **What it is:** a control plane + Electron shell that launches trusted desktop software (**Chrome** and **MPV** today; more app types as the API grows) with **10-foot UI** and a predictable **return-to-home** path after external apps exit or lose focus.
 - **What it is not:** a cloud media service, credential vault, or web-automation product. Streaming via Chrome is **best-effort** on Linux; **local media and launcher quality** are the product pillars. Product boundaries and strategy: [`docs/project-plan.md`](docs/project-plan.md).
 
-**Stack (implemented):** **Electron** (narrow preload IPC) + **Vite / React** + **ASP.NET Core Minimal API** — target framework in [`api/OrangeTv.Api.csproj`](api/OrangeTv.Api.csproj) (e.g. **net9.0**) + **SQLite** + background workers. Target appliance: **Ubuntu 24.04**, **Wayland** + **labwc** (see project plan).
+**Stack (implemented):** **Electron** (narrow preload IPC) + **Vite / React** + **ASP.NET Core Minimal API** — target framework in [`api/OrangeTv.Api.csproj`](api/OrangeTv.Api.csproj) (currently **net10.0**) + **SQLite** + background workers. Target appliance: **Ubuntu 24.04**, **Wayland** + **labwc** (see project plan).
 
 ## Developer documentation
 

@@ -46,4 +46,27 @@ public sealed class BrowserShellOptionsTests
         Assert.False(opt.UseAppMode);
         Assert.Equal(120, opt.ReadyTimeoutSeconds);
     }
+
+    [Fact]
+    public void Prefixed_api_section_overrides_root_browser_shell_section()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["BrowserShell:Enabled"] = "true",
+                    ["BrowserShell:ExecutablePath"] = "/usr/bin/google-chrome",
+                    ["ORANGETV_API:BrowserShell:Enabled"] = "false",
+                    ["ORANGETV_API:BrowserShell:ExecutablePath"] = "/usr/bin/chromium",
+                })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.ConfigureBrowserShellOptions(config);
+        using var provider = services.BuildServiceProvider();
+        var opt = provider.GetRequiredService<IOptions<BrowserShellOptions>>().Value;
+
+        Assert.False(opt.Enabled);
+        Assert.Equal("/usr/bin/chromium", opt.ExecutablePath);
+    }
 }
